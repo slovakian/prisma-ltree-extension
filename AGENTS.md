@@ -33,6 +33,22 @@ docs/
   ltree/                     # PostgreSQL ltree reference docs
 ```
 
+## Synced External References
+
+Before starting extension work, run `pnpm run sync-docs` to clone the prisma-next
+source into `.sync/prisma-next/` (gitignored — never committed). Agents must consult
+this clone for **reference implementations, SPI types, and test patterns**.
+
+### Reference path map
+
+| What                                  | Path                                                |
+| ------------------------------------- | --------------------------------------------------- |
+| pgvector reference (closest to ltree) | `.sync/prisma-next/packages/3-extensions/pgvector/` |
+| postgis reference (multi-operator)    | `.sync/prisma-next/packages/3-extensions/postgis/`  |
+| paradedb reference                    | `.sync/prisma-next/packages/3-extensions/paradedb/` |
+| Extension architecture docs (source)  | `.sync/prisma-next/docs/`                           |
+| Extension author skills               | `.sync/prisma-next/skills/extension-author/`        |
+
 ## Key Documentation (consult these before coding)
 
 | Doc                         | Path                                                    | When                                                                   |

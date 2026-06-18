@@ -24,6 +24,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Synced external references (not committed)
+.sync/
+
 # AI agent worktrees
 .claude/worktrees/
 !.vscode/
