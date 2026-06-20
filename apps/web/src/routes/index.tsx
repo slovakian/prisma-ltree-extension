@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const GITHUB_URL = "https://github.com/prisma/prisma";
+const GITHUB_URL = "https://github.com/slovakian/prisma-ltree";
 
 interface Op {
   method: string;
