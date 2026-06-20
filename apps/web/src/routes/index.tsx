@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { CodeBlock } from "@/components/code-block";
 import { InstallCommand } from "@/components/install-command";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { homeCodeBlocks } from "@/lib/home-code-samples";
 
 const getHomeHighlights = createServerFn({ method: "GET" }).handler(async () => {
@@ -141,8 +142,12 @@ function Home() {
           manipulation, and lowest-common-ancestor — without dropping to raw SQL.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button render={<a href="#setup">Get started</a>} />
-          <Button variant="outline" render={<a href={GITHUB_URL}>View on GitHub</a>} />
+          <a href="#setup" className={cn(buttonVariants())}>
+            Get started
+          </a>
+          <a href={GITHUB_URL} className={cn(buttonVariants({ variant: "outline" }))}>
+            View on GitHub
+          </a>
         </div>
         <div className="mt-8 max-w-md">
           <InstallCommand />
