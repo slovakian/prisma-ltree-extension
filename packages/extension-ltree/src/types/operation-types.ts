@@ -86,5 +86,42 @@ export type QueryOperationTypes<CT extends CodecTypesBase> = SqlQueryOperationTy
         ...rest: ReadonlyArray<CodecExpression<"pg/ltree@1", boolean, CT>>
       ) => Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
     };
+    // Tier 2 — concatenation. The text operand is bound as text and cast
+    // in-template; `prependText` splices the label on the left (`text || ltree`).
+    readonly concat: {
+      readonly self: { readonly codecId: "pg/ltree@1" };
+      readonly impl: (
+        self: CodecExpression<"pg/ltree@1", boolean, CT>,
+        other: CodecExpression<"pg/ltree@1", boolean, CT>,
+      ) => Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
+    };
+    readonly concatText: {
+      readonly self: { readonly codecId: "pg/ltree@1" };
+      readonly impl: (
+        self: CodecExpression<"pg/ltree@1", boolean, CT>,
+        label: CodecExpression<"pg/text@1", boolean, CT>,
+      ) => Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
+    };
+    readonly prependText: {
+      readonly self: { readonly codecId: "pg/ltree@1" };
+      readonly impl: (
+        self: CodecExpression<"pg/ltree@1", boolean, CT>,
+        prefix: CodecExpression<"pg/text@1", boolean, CT>,
+      ) => Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
+    };
+    // Tier 2 — conversion. `toLtree` is rooted on `pg/text@1` (ADR-002): it is the
+    // reachable form of `text2ltree`, surfacing on text columns rather than ltree.
+    readonly toText: {
+      readonly self: { readonly codecId: "pg/ltree@1" };
+      readonly impl: (
+        self: CodecExpression<"pg/ltree@1", boolean, CT>,
+      ) => Expression<{ readonly codecId: "pg/text@1"; readonly nullable: false }>;
+    };
+    readonly toLtree: {
+      readonly self: { readonly codecId: "pg/text@1" };
+      readonly impl: (
+        self: CodecExpression<"pg/text@1", boolean, CT>,
+      ) => Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
+    };
   }
 >;

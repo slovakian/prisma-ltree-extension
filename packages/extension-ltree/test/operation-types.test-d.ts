@@ -20,7 +20,9 @@ type BoolReturn = Expression<{ readonly codecId: "pg/bool@1"; readonly nullable:
 type LtreeReturn = Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
 type IntReturn = Expression<{ readonly codecId: "pg/int4@1"; readonly nullable: false }>;
 
-test("the full Tier 1 operation set is present", () => {
+type TextReturn = Expression<{ readonly codecId: "pg/text@1"; readonly nullable: false }>;
+
+test("the full Tier 1 + Tier 2 operation set is present", () => {
   expectTypeOf<keyof Ops>().toEqualTypeOf<
     | "isAncestorOf"
     | "isDescendantOf"
@@ -32,6 +34,11 @@ test("the full Tier 1 operation set is present", () => {
     | "subpath"
     | "indexOf"
     | "lca"
+    | "concat"
+    | "concatText"
+    | "prependText"
+    | "toText"
+    | "toLtree"
   >();
 });
 
@@ -56,6 +63,25 @@ test("scalar functions return ltree or int4", () => {
   expectTypeOf<ReturnType<Impl<"subltree">>>().toEqualTypeOf<LtreeReturn>();
   expectTypeOf<ReturnType<Impl<"subpath">>>().toEqualTypeOf<LtreeReturn>();
   expectTypeOf<ReturnType<Impl<"lca">>>().toEqualTypeOf<LtreeReturn>();
+});
+
+test("concatenation operators take ltree/text args and return ltree", () => {
+  expectTypeOf<ReturnType<Impl<"concat">>>().toEqualTypeOf<LtreeReturn>();
+  expectTypeOf<ReturnType<Impl<"concatText">>>().toEqualTypeOf<LtreeReturn>();
+  expectTypeOf<ReturnType<Impl<"prependText">>>().toEqualTypeOf<LtreeReturn>();
+  // concat's other path accepts a raw ltree string; the text variants a label.
+  expectTypeOf<string>().toExtend<ArgOf<"concat", 1>>();
+  expectTypeOf<string>().toExtend<ArgOf<"concatText", 1>>();
+  expectTypeOf<string>().toExtend<ArgOf<"prependText", 1>>();
+});
+
+test("conversion operators bridge ltree<->text", () => {
+  // toText: ltree self -> text.
+  expectTypeOf<ReturnType<Impl<"toText">>>().toEqualTypeOf<TextReturn>();
+  expectTypeOf<Ops["toText"]["self"]["codecId"]>().toEqualTypeOf<"pg/ltree@1">();
+  // toLtree: text self -> ltree (ADR-002 — rooted on text, not ltree).
+  expectTypeOf<ReturnType<Impl<"toLtree">>>().toEqualTypeOf<LtreeReturn>();
+  expectTypeOf<Ops["toLtree"]["self"]["codecId"]>().toEqualTypeOf<"pg/text@1">();
 });
 
 test("subpath length and indexOf offset are optional, lca requires >= 2 paths", () => {

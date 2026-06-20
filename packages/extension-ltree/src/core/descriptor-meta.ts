@@ -18,10 +18,12 @@ type CodecTypesBase = Record<string, { readonly input: unknown; readonly output:
 type BoolReturn = Expression<{ readonly codecId: "pg/bool@1"; readonly nullable: false }>;
 type LtreeReturn = Expression<{ readonly codecId: "pg/ltree@1"; readonly nullable: false }>;
 type IntReturn = Expression<{ readonly codecId: "pg/int4@1"; readonly nullable: false }>;
+type TextReturn = Expression<{ readonly codecId: "pg/text@1"; readonly nullable: false }>;
 
 const BOOL_RETURN = { codecId: "pg/bool@1", nullable: false } as const;
 const LTREE_RETURN = { codecId: "pg/ltree@1", nullable: false } as const;
 const INT_RETURN = { codecId: "pg/int4@1", nullable: false } as const;
+const TEXT_RETURN = { codecId: "pg/text@1", nullable: false } as const;
 const TEXT_CODEC_ID = "pg/text@1" as const;
 const TEXT_ARRAY_CODEC_ID = "pg/text-array@1" as const;
 const INT_CODEC_ID = "pg/int4@1" as const;
@@ -98,6 +100,24 @@ export function ltreeQueryOperations<CT extends CodecTypesBase>(): QueryOperatio
       },
     });
   };
+
+  // Concatenation operators produce a new ltree. `concat` joins two ltree paths
+  // (`{{self}} || {{arg0}}`); `concatText`/`prependText` splice a text label onto
+  // the right/left. The text operand binds as `pg/text@1` and is cast in-template
+  // (PG resolves the `||` overload from the cast). `prependText` places `{{self}}`
+  // second because the ltree receiver is the RIGHT operand of `text || ltree`;
+  // `args[0]` is still `self` (the renderer binds by placeholder name, not order).
+  const concatOp = (
+    method: string,
+    template: string,
+    args: readonly [AnyExpression, ...AnyExpression[]],
+  ): LtreeReturn =>
+    buildOperation({
+      method,
+      args,
+      returns: LTREE_RETURN,
+      lowering: { targetFamily: "sql", strategy: "function", template },
+    });
 
   return {
     isAncestorOf: {
@@ -182,6 +202,47 @@ export function ltreeQueryOperations<CT extends CodecTypesBase>(): QueryOperatio
           ...rest.map((p) => toExpr(p, selfCodec)),
         ]);
       },
+    },
+    // Tier 2 — concatenation (`||`).
+    concat: {
+      self: { codecId: LTREE_CODEC_ID },
+      impl: (self, other): LtreeReturn => {
+        const selfCodec = codecOf(self);
+        return concatOp("concat", "{{self}} || {{arg0}}", [
+          toExpr(self, selfCodec),
+          toExpr(other, selfCodec),
+        ]);
+      },
+    },
+    concatText: {
+      self: { codecId: LTREE_CODEC_ID },
+      impl: (self, label): LtreeReturn =>
+        concatOp("concatText", "{{self}} || ({{arg0}})::text", [
+          toExpr(self, codecOf(self)),
+          toExpr(label, { codecId: TEXT_CODEC_ID }),
+        ]),
+    },
+    // `text || ltree` — the ltree receiver is the right operand (ADR-002).
+    prependText: {
+      self: { codecId: LTREE_CODEC_ID },
+      impl: (self, prefix): LtreeReturn =>
+        concatOp("prependText", "({{arg0}})::text || {{self}}", [
+          toExpr(self, codecOf(self)),
+          toExpr(prefix, { codecId: TEXT_CODEC_ID }),
+        ]),
+    },
+    // Tier 2 — conversion.
+    toText: {
+      self: { codecId: LTREE_CODEC_ID },
+      impl: (self): TextReturn =>
+        funcOp("toText", "ltree2text", TEXT_RETURN, [toExpr(self, codecOf(self))]),
+    },
+    // `text2ltree(text)` — rooted on `pg/text@1` (the only reachable form of the
+    // free-function `text2ltree`; see ADR-002). Surfaces as `.toLtree()` on text.
+    toLtree: {
+      self: { codecId: TEXT_CODEC_ID },
+      impl: (self): LtreeReturn =>
+        funcOp("toLtree", "text2ltree", LTREE_RETURN, [toExpr(self, codecOf(self))]),
     },
   };
 }

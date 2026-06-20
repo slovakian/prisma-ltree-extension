@@ -31,7 +31,7 @@ describe("prisma-ltree operations", () => {
     expect(ltreeCodecDescriptor?.codecId).toBe("pg/ltree@1");
   });
 
-  it("exposes the full Tier 1 operation set (hierarchy, pattern-match, scalar fns)", () => {
+  it("exposes the full Tier 1 + Tier 2 operation set", () => {
     const operations = ltreeRuntimeDescriptor.queryOperations!();
     expect(Object.keys(operations).sort()).toEqual(
       [
@@ -45,6 +45,11 @@ describe("prisma-ltree operations", () => {
         "subpath",
         "indexOf",
         "lca",
+        "concat",
+        "concatText",
+        "prependText",
+        "toText",
+        "toLtree",
       ].sort(),
     );
   });
@@ -102,6 +107,35 @@ describe("prisma-ltree operations", () => {
       expect(op).toBeDefined();
       const expr = op?.impl(
         ltreeExpr("Top.Child1.Child2", ltreeCodec) as never,
+        ...(args as never[]),
+      ) as unknown as { buildAst(): OperationExpr };
+      const ast = expr.buildAst();
+      expect(ast).toBeInstanceOf(OperationExpr);
+      expect(ast.method).toBe(method);
+      expect(ast.lowering).toEqual({ targetFamily: "sql", strategy: "function", template });
+      expect(ast.returns).toEqual({ codecId: returnCodecId, nullable: false });
+    },
+  );
+
+  // Tier 2 — concatenation + conversion. method -> [template, args after self,
+  // return codecId, self codecId]. `toLtree` is rooted on text (ADR-002).
+  const tier2Cases: ReadonlyArray<readonly [string, string, readonly unknown[], string, string]> = [
+    ["concat", "{{self}} || {{arg0}}", ["a.b"], "pg/ltree@1", "pg/ltree@1"],
+    ["concatText", "{{self}} || ({{arg0}})::text", ["leaf"], "pg/ltree@1", "pg/ltree@1"],
+    ["prependText", "({{arg0}})::text || {{self}}", ["root"], "pg/ltree@1", "pg/ltree@1"],
+    ["toText", "ltree2text({{self}})", [], "pg/text@1", "pg/ltree@1"],
+    ["toLtree", "text2ltree({{self}})", [], "pg/ltree@1", "pg/text@1"],
+  ];
+
+  it.each(tier2Cases)(
+    "%s lowers to `%s` with the expected return codec",
+    (method, template, args, returnCodecId, selfCodecId) => {
+      const operations = ltreeRuntimeDescriptor.queryOperations!();
+      const selfCodec: CodecRef = { codecId: selfCodecId };
+      const op = operations[method];
+      expect(op).toBeDefined();
+      const expr = op?.impl(
+        ltreeExpr("a", selfCodec) as never,
         ...(args as never[]),
       ) as unknown as { buildAst(): OperationExpr };
       const ast = expr.buildAst();
