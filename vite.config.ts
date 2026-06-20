@@ -4,7 +4,19 @@ export default defineConfig({
   staged: {
     "*": "vp check --fix",
   },
-  fmt: {},
+  fmt: {
+    ignorePatterns: [
+      "**/src/contract.json",
+      "**/src/contract.d.ts",
+      "**/migrations/**/migration.json",
+      "**/migrations/**/ops.json",
+      "**/migrations/**/end-contract.json",
+      "**/migrations/**/end-contract.d.ts",
+      "**/migrations/**/start-contract.json",
+      "**/migrations/**/head.contract.json",
+      "**/migrations/**/head.contract.d.ts",
+    ],
+  },
   lint: {
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
