@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import { CodeBlock } from "@/components/code-block";
 import { Button } from "@/components/ui/button";
+import { homeCodeBlocks } from "@/lib/home-code-samples";
+
+const getHomeHighlights = createServerFn({ method: "GET" }).handler(async () => {
+  const { highlightCodeBlocks } = await import("@/lib/shiki.server");
+  return { highlights: await highlightCodeBlocks(homeCodeBlocks) };
+});
 
 export const Route = createFileRoute("/")({
+  loader: () => getHomeHighlights(),
   component: Home,
   head: () => ({
     meta: [
@@ -30,7 +38,6 @@ interface Feature {
   title: string;
   blurb: string;
   ops: Op[];
-  example: string;
 }
 
 const features: Feature[] = [
@@ -43,14 +50,6 @@ const features: Feature[] = [
       { method: "path.isAncestorOf(rhs)", sql: "ltree @> ltree" },
       { method: "path.isDescendantOf(rhs)", sql: "ltree <@ ltree" },
     ],
-    example: `// Every category under "Top.Science"
-const plan = sql
-  .from(tables.category)
-  .select({ id: tables.category.columns.id })
-  .where(
-    tables.category.columns.path.isDescendantOf(param("prefix")),
-  )
-  .build({ params: { prefix: "Top.Science" } });`,
   },
   {
     id: "pattern-matching",
@@ -62,15 +61,6 @@ const plan = sql
       { method: "path.matchesLqueryArray(patterns)", sql: "ltree ? lquery[]" },
       { method: "path.matchesLtxtquery(query)", sql: "ltree @ ltxtquery" },
     ],
-    example: `// Paths like "Top.*.Astronomy" at any depth
-sql
-  .from(tables.category)
-  .where(
-    tables.category.columns.path.matchesLquery(
-      param("pattern"),
-    ),
-  )
-  .build({ params: { pattern: "Top.*.Astronomy" } });`,
   },
   {
     id: "scalar-functions",
@@ -90,14 +80,6 @@ sql
       { method: "path.indexOf(other, off?)", sql: "index(ltree, ltree, off)" },
       { method: "path.lca(other, ...rest)", sql: "lca(ltree, ltree, ...)" },
     ],
-    example: `// Project the depth of each path
-sql
-  .from(tables.category)
-  .select({
-    id: tables.category.columns.id,
-    depth: tables.category.columns.path.nlevel(),
-  })
-  .build({ params: {} });`,
   },
   {
     id: "concat-convert",
@@ -111,15 +93,6 @@ sql
       { method: "path.toText()", sql: "ltree2text(ltree)" },
       { method: "text.toLtree()", sql: "text2ltree(text)" },
     ],
-    example: `// Append a child label to an existing path
-sql
-  .from(tables.category)
-  .select({
-    child: tables.category.columns.path.concatText(
-      param("label"),
-    ),
-  })
-  .build({ params: { label: "Astronomy" } });`,
   },
   {
     id: "array-first-match",
@@ -135,60 +108,16 @@ sql
         sql: "ltree[] ?@ ltxtquery",
       },
     ],
-    example: `// First stored path that is a descendant of the arg
-sql
-  .from(tables.node)
-  .select({
-    match: tables.node.columns.paths.firstDescendantOf(
-      param("prefix"),
-    ),
-  })
-  .build({ params: { prefix: "Top.Science" } });`,
   },
 ];
-
-const installCode = `pnpm add prisma-ltree`;
-
-const configCode = `// prisma-next.config.ts
-import { defineConfig } from "@prisma-next/cli/config-types";
-import postgresAdapter from "@prisma-next/adapter-postgres/control";
-import sql from "@prisma-next/family-sql/control";
-import postgres from "@prisma-next/target-postgres/control";
-import ltree from "prisma-ltree/control";
-
-export default defineConfig({
-  family: sql,
-  target: postgres,
-  adapter: postgresAdapter,
-  extensionPacks: [ltree],
-});`;
-
-const contractCode = `// Add an ltree column to a model
-import { int4Column, textColumn } from "@prisma-next/adapter-postgres/column-types";
-import { defineContract, field, model } from "@prisma-next/sql-contract-ts/contract-builder";
-import { ltree } from "prisma-ltree/column-types";
-import ltreePack from "prisma-ltree/pack";
-
-export const contract = defineContract({
-  family: sqlFamily,
-  target: postgres,
-  extensionPacks: { ltree: ltreePack },
-  models: {
-    Category: model("Category", {
-      fields: {
-        id: field.column(int4Column).id(),
-        name: field.column(textColumn),
-        path: field.column(ltree()),
-      },
-    }).sql({ table: "category" }),
-  },
-});`;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-2 text-xs tracking-widest text-muted-foreground uppercase">{children}</p>;
 }
 
 function Home() {
+  const { highlights } = Route.useLoaderData();
+
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-16 md:py-24">
       {/* Hero */}
@@ -215,7 +144,7 @@ function Home() {
           <Button variant="outline" render={<a href={GITHUB_URL}>View on GitHub</a>} />
         </div>
         <div className="mt-8 max-w-md">
-          <CodeBlock code={installCode} lang="bash" />
+          <CodeBlock html={highlights.install.html} lang="bash" />
         </div>
       </header>
 
@@ -236,14 +165,14 @@ function Home() {
             <p className="mb-3 text-sm text-muted-foreground">
               Add <code>prisma-ltree/control</code> to your config&apos;s extension packs.
             </p>
-            <CodeBlock code={configCode} />
+            <CodeBlock html={highlights.config.html} />
           </div>
           <div>
             <h3 className="mb-2 text-sm font-medium">2. Declare an ltree column</h3>
             <p className="mb-3 text-sm text-muted-foreground">
               Use the <code>ltree()</code> helper (or <code>ltreeArray()</code>) in your contract.
             </p>
-            <CodeBlock code={contractCode} />
+            <CodeBlock html={highlights.contract.html} />
           </div>
         </div>
       </section>
@@ -286,7 +215,7 @@ function Home() {
                   </table>
                 </div>
               </div>
-              <CodeBlock code={feature.example} className="self-start" />
+              <CodeBlock html={highlights[`feature.${feature.id}`].html} className="self-start" />
             </article>
           ))}
         </div>
