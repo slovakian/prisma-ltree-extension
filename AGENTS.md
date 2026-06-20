@@ -88,8 +88,9 @@ Every pack provides some subset of:
 - **Core ops**:
   - `isAncestorOf` → `{{self}} @> {{arg0}}`
   - `isDescendantOf` → `{{self}} <@ {{arg0}}`
-  - `matchesLquery` → `{{self}} ~ {{arg0}}`
-  - `matchesLtxtquery` → `{{self}} ? {{arg0}}`
+  - `matchesLquery` → `{{self}} ~ ({{arg0}})::lquery`
+  - `matchesLqueryArray` → `{{self}} ? ({{arg0}})::lquery[]`
+  - `matchesLtxtquery` → `{{self}} @ ({{arg0}})::ltxtquery`
 - **Scalar fns** (phase 2): `nlevel()`, `subpath()`, `lca()`, `indexOf()`
 
 ## Reference Implementations

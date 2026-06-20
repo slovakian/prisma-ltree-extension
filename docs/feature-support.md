@@ -1,0 +1,98 @@
+# prisma-ltree — Feature Support Matrix
+
+**Source of truth** for what `prisma-ltree` supports, does not support, and has in progress.
+Doc-writing agents read this file to accurately reflect the extension's surface.
+
+**Status values:** `supported` · `in-progress` · `planned` · `out-of-scope` (tracked, not built)
+**Scope decision:** "Everything reasonable" — Tier 1 + Tier 2 + Tier 3 (first-match array ops)
+**Last updated:** 2026-06-19
+
+See `docs/spec/prisma-ltree-spec.md` for the full spec. See `docs/progress/` for per-tier logs.
+
+---
+
+## Codec & Contract
+
+| Feature                                              | Status       | Notes                                                   |
+| ---------------------------------------------------- | ------------ | ------------------------------------------------------- |
+| `pg/ltree@1` codec (string↔string, label validation) | supported    | Case 1, traits `['equality','order']`, constant factory |
+| `ltree()` column helper                              | supported    | Non-parameterized; `nativeType: 'ltree'`                |
+| `CREATE EXTENSION IF NOT EXISTS ltree` migration     | supported    | invariantId `ltree:install-ltree-v1`                    |
+| Contract storage type `ltree` (codec-instance)       | supported    | TS contract source (not PSL)                            |
+| `lquery` as a column type                            | out-of-scope | By decision — lquery is a validated string param        |
+| `ltxtquery` as a column type                         | out-of-scope | By decision — ltxtquery is a validated string param     |
+
+## Hierarchy Operators (→ `pg/bool@1`)
+
+| SQL              | API method                 | Status    | Tier |
+| ---------------- | -------------------------- | --------- | ---- |
+| `ltree @> ltree` | `path.isAncestorOf(rhs)`   | supported | 1    |
+| `ltree <@ ltree` | `path.isDescendantOf(rhs)` | supported | 1    |
+
+## Pattern-Matching Operators (→ `pg/bool@1`)
+
+| SQL                 | API method                          | Arg      | Status    | Tier |
+| ------------------- | ----------------------------------- | -------- | --------- | ---- |
+| `ltree ~ lquery`    | `path.matchesLquery(pattern)`       | string   | supported | 1    |
+| `ltree ? lquery[]`  | `path.matchesLqueryArray(patterns)` | string[] | supported | 1    |
+| `ltree @ ltxtquery` | `path.matchesLtxtquery(query)`      | string   | supported | 1    |
+
+## Scalar Functions
+
+| SQL                           | API method                    | Returns      | Status                            | Tier |
+| ----------------------------- | ----------------------------- | ------------ | --------------------------------- | ---- |
+| `nlevel(ltree)`               | `path.nlevel()`               | `pg/int4@1`  | supported                         | 1    |
+| `subltree(ltree, start, end)` | `path.subltree(start, end)`   | `pg/ltree@1` | supported                         | 1    |
+| `subpath(ltree, offset, len)` | `path.subpath(offset, len?)`  | `pg/ltree@1` | supported                         | 1    |
+| `subpath(ltree, offset)`      | (overload of above)           | `pg/ltree@1` | supported                         | 1    |
+| `index(a, b)`                 | `path.indexOf(other)`         | `pg/int4@1`  | supported                         | 1    |
+| `index(a, b, offset)`         | `path.indexOf(other, offset)` | `pg/int4@1`  | supported                         | 1    |
+| `lca(ltree, ltree, ...)`      | `path.lca(other, ...rest)`    | `pg/ltree@1` | supported (≥2 paths; ADR-001)     | 1    |
+| `lca(ltree[])`                | `ltree.lca(paths)`            | `pg/ltree@1` | planned — revisit w/ ADR-002/-003 | 1    |
+
+## Concatenation (→ `pg/ltree@1`)
+
+| SQL    | API method | Status | Tier                      |
+| ------ | ---------- | ------ | ------------------------- | ----------------------- | --- |
+| `ltree |            | ltree` | `path.concat(rhs)`        | planned                 | 2   |
+| `ltree |            | text`  | `path.concatText(rhs)`    | planned                 | 2   |
+| `text  |            | ltree` | `ltree.prependText(text)` | planned — API shape TBD | 2   |
+
+## Conversion
+
+| SQL                 | API method             | Returns      | Status                  | Tier |
+| ------------------- | ---------------------- | ------------ | ----------------------- | ---- |
+| `ltree2text(ltree)` | `path.toText()`        | `pg/text@1`  | planned                 | 2    |
+| `text2ltree(text)`  | `ltree.fromText(text)` | `pg/ltree@1` | planned — API shape TBD | 2    |
+
+## Array First-Match Operators (→ `pg/ltree@1`)
+
+Receiver is `ltree[]`. Requires array-typed receiver support — delivered last.
+
+| SQL                    | API method                         | Status  | Tier |
+| ---------------------- | ---------------------------------- | ------- | ---- |
+| `ltree[] ?@> ltree`    | `paths.firstAncestorOf(rhs)`       | planned | 3    |
+| `ltree[] ?<@ ltree`    | `paths.firstDescendantOf(rhs)`     | planned | 3    |
+| `ltree[] ?~ lquery`    | `paths.firstMatchLquery(pattern)`  | planned | 3    |
+| `ltree[] ?@ ltxtquery` | `paths.firstMatchLtxtquery(query)` | planned | 3    |
+
+## Out-of-Scope (Tracked)
+
+| Feature                                 | SQL                   | Status       | Reason / Revisit                                                                             |
+| --------------------------------------- | --------------------- | ------------ | -------------------------------------------------------------------------------------------- |
+| Boolean array variant                   | `ltree[] @> ltree`    | out-of-scope | "Less useful" per scope; low marginal cost once array receiver exists — revisit after Tier 3 |
+| Boolean array variant                   | `ltree[] <@ ltree`    | out-of-scope | same                                                                                         |
+| Boolean array variant                   | `ltree[] ~ lquery`    | out-of-scope | same                                                                                         |
+| Boolean array variant                   | `ltree[] ? lquery[]`  | out-of-scope | same                                                                                         |
+| Boolean array variant                   | `ltree[] @ ltxtquery` | out-of-scope | same                                                                                         |
+| GiST index (`gist_ltree_ops`, `siglen`) | DDL                   | out-of-scope | DDL/index story owned by Prisma's index system                                               |
+| GiST array index (`gist__ltree_ops`)    | DDL                   | out-of-scope | same                                                                                         |
+| Hash index over `ltree`                 | DDL                   | out-of-scope | same                                                                                         |
+| B-tree index over `ltree`               | DDL                   | out-of-scope | Automatic for `<,<=,=,>=,>`; no extension op needed                                          |
+
+---
+
+## Changelog
+
+- 2026-06-19 — Initial matrix created from spec. All in-scope features `planned`; out-of-scope features tracked with reasons.
+- 2026-06-19 — Tier 1 complete (Checkpoint 2). Codec/contract/migration + all Tier 1 operators (hierarchy, pattern-match) and scalar functions (`nlevel`, `subltree`, `subpath`, `indexOf`, `lca`) → `supported`, each with golden + PGlite integration + type-level coverage. `lca` is a variadic method requiring ≥2 paths (ADR-001); the `ltree[]` array form remains `planned`.

@@ -148,12 +148,13 @@ extensionPacks: {
 
 ### Hierarchy operators
 
-| SQL              | API method                     |
-| ---------------- | ------------------------------ |
-| `path @> rhs`    | `path.isAncestorOf(rhs)`       |
-| `path <@ rhs`    | `path.isDescendantOf(rhs)`     |
-| `path ~ pattern` | `path.matchesLquery(pattern)`  |
-| `path ? query`   | `path.matchesLtxtquery(query)` |
+| SQL                | API method                          |
+| ------------------ | ----------------------------------- |
+| `path @> rhs`      | `path.isAncestorOf(rhs)`            |
+| `path <@ rhs`      | `path.isDescendantOf(rhs)`          |
+| `path ~ lquery`    | `path.matchesLquery(pattern)`       |
+| `path ? lquery[]`  | `path.matchesLqueryArray(patterns)` |
+| `path @ ltxtquery` | `path.matchesLtxtquery(query)`      |
 
 ### Scalar functions
 
