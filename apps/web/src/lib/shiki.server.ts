@@ -5,7 +5,7 @@ const THEME = "tokyo-night";
 const LANGS = ["typescript", "bash"] as const;
 
 // Cloudflare Workers disallow runtime WASM instantiation (oniguruma). The JS
-// regex engine avoids WebAssembly and works in SSR/prerender and at the edge.
+// regex engine avoids WebAssembly and works in SSR at the edge.
 const engine = createJavaScriptRegexEngine();
 
 let highlighterPromise: Promise<Highlighter> | undefined;
