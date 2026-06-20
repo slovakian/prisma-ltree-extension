@@ -22,7 +22,7 @@ export default Alchemy.Stack(
 
     const docs = yield* Cloudflare.Vite("Docs", {
       rootDir: path.resolve(import.meta.dirname, "apps/web"),
-      ...(stage === "prod" ? { domain: DOCS_DOMAIN } : {}),
+      domain: stage === "prod" ? DOCS_DOMAIN : undefined,
       compatibility: {
         flags: ["nodejs_compat"],
       },
