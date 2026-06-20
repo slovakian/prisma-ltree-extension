@@ -1,59 +1,65 @@
 ---
 name: prisma-ltree
 description: >-
-  Route vague prisma-ltree / ltree extension prompts to the right workflow
-  skill. Use for "help with prisma-ltree", "how does this extension work",
-  "where do I start with ltree", "explain the four slices", "I'm new to this
-  repo", "what can I do with prisma-ltree", and comparison questions about
-  extension architecture. Do NOT use when the prompt clearly matches a sibling
-  workflow — onboarding / context loading, codec or column-helper work, query
-  operator authoring, testing, local validation (vp check / test / build /
-  ready), or upgrading @prisma-next/* (use upstream prisma-next-extension-upgrade).
+  Route vague PostgreSQL ltree / hierarchy / taxonomy prompts to the right
+  prisma-ltree skill. Use for "help with ltree", "hierarchical paths in
+  Postgres", "category tree", "org chart paths", "materialized path",
+  "taxonomy", "ltree extension", "prisma-ltree", "tree queries in Prisma
+  Next", "ancestor descendant query", "lquery", "ltxtquery", and "how do I
+  model nested categories" when the user has or wants prisma-ltree. Do NOT use
+  when the prompt clearly matches adoption (install, config, contract column,
+  CREATE EXTENSION, wire runtime) — load prisma-ltree-adoption; or queries
+  (isAncestorOf, isDescendantOf, matchesLquery, nlevel, subpath, lca,
+  concatText, firstAncestorOf) — load prisma-ltree-queries; or base Prisma Next
+  setup with no ltree mention — load prisma-next-quickstart instead.
 ---
 
 # prisma-ltree — Router
 
-This skill disambiguates vague prompts about the **prisma-ltree** monorepo — the `@prisma-next/extension-ltree` pack for PostgreSQL `ltree`. When the user hasn't named a concrete task, route them to the right sibling skill.
+> **Hierarchical paths in Postgres, typed in Prisma Next.**
 
-## When to use
+This skill disambiguates prompts about PostgreSQL `ltree` in a Prisma Next app. When the user has not yet named a concrete task — _"help me with category trees"_, _"how does ltree work in Prisma?"_ — route them to the right sibling skill.
 
-- The user has not stated a concrete task.
-- Meta-questions: _"how does this extension work?"_, _"what's the architecture?"_
-- First touch on the repo without a specific file or feature named.
+## When to Use
 
-## When not to use
+- The user mentions `ltree`, hierarchical paths, taxonomies, org charts, or nested categories **and** Prisma Next (or `prisma-ltree`).
+- The prompt is a meta-question: overview, where to start, which operator to use (without naming one).
+- You need to decide between **setting up** the extension vs **writing queries** with it.
 
-Load the matching sibling directly when the user names a workflow:
+## When Not to Use
 
-| User intent                                             | Skill                                      |
-| ------------------------------------------------------- | ------------------------------------------ |
-| First session, project layout, sync-docs, reference map | `prisma-ltree-onboard`                     |
-| Codec, column helper, encode/decode, validation         | `prisma-ltree-codec`                       |
-| Query operator, SQL lowering, `descriptor-meta.ts`      | `prisma-ltree-operators`                   |
-| Tests, coverage, PGlite integration, golden lowering    | `prisma-ltree-test`                        |
-| `vp check`, `vp test`, build, `ready`, check-pins       | `prisma-ltree-develop`                     |
-| Bump `@prisma-next/*` minor versions                    | `prisma-next-extension-upgrade` (upstream) |
+- **Installing or wiring the extension** → `prisma-ltree-adoption`.
+- **Writing a specific query** (ancestor check, pattern match, depth, LCA, path concat) → `prisma-ltree-queries`.
+- **No ltree involved** — generic Prisma Next setup, migrations, or ORM usage → upstream `prisma-next` router / `prisma-next-quickstart`.
+- **Maintaining the prisma-ltree package itself** — not covered by this cluster; see repo `CLAUDE.md`.
 
 ## Routing rules
 
-If the prompt clearly matches a sibling, route there without asking.
+If the prompt clearly matches a workflow skill, route there **without asking**.
 
-Otherwise ask **one** disambiguating question. Pick from:
+Otherwise ask **one** disambiguating question:
 
-- _"Are you trying to understand the project layout, or implement a specific feature?"_ → `prisma-ltree-onboard` vs `prisma-ltree-operators` / `prisma-ltree-codec`.
-- _"Is this about a codec/column type, or a query operator that lowers to SQL?"_ → `prisma-ltree-codec` vs `prisma-ltree-operators`.
-- _"Do you want to write or fix tests, or run the validation suite?"_ → `prisma-ltree-test` vs `prisma-ltree-develop`.
-- _"Are you upgrading the Prisma Next framework pins?"_ → `prisma-next-extension-upgrade`.
-
-If you still can't tell, ask what they want to accomplish. Do not guess.
+- _"Do you need to install and wire prisma-ltree into your project, or do you already have ltree columns and want to write queries?"_
+  - Install / config / contract / migration → `prisma-ltree-adoption`
+  - Queries / operators / path logic → `prisma-ltree-queries`
+- _"Is your app already on Prisma Next with Postgres?"_
+  - No → `prisma-next-quickstart` first, then `prisma-ltree-adoption`
+  - Yes → continue to adoption or queries
 
 ## Canonical model (one paragraph)
 
-`prisma-ltree` is a Prisma Next **extension pack** with four optional slices: contract (column types + baseline migration), query-lane (typed operators → SQL templates), runtime (codecs + operation registry), and migrate (contract space on disk). The pack exposes multi-plane entrypoints (`/control`, `/runtime`, `/column-types`, `/codec-types`, `/operation-types`, `/pack`). Consumer apps compose the pack in `prisma-next.config.ts` and reference `ltree()` columns in their contract.
+PostgreSQL `ltree` stores **dot-separated label paths** (e.g. `Top.Science.Astronomy`). The **prisma-ltree** extension pack adds a typed `ltree` column codec, installs the contrib extension via a baseline migration, and registers **methods on ltree columns** in the SQL builder and ORM — `path.isDescendantOf(...)`, `path.matchesLquery(...)`, `path.nlevel()`, and others — so you do not drop to raw SQL for standard tree operations. Array columns use `ltree[]` with a separate codec and **first-match** methods (`paths.firstAncestorOf(...)`).
+
+Three planes consumers wire once:
+
+1. **Control** — `prisma-next.config.ts` lists `prisma-ltree/control` in `extensions`.
+2. **Contract** — TypeScript contract declares `field.column(ltree())` or `ltreeArray()` and registers `prisma-ltree/pack`.
+3. **Runtime** — `db.ts` passes `prisma-ltree/runtime` in `extensions`.
+
+After that, query authoring is the day-to-day work (`prisma-ltree-queries`).
 
 ## Checklist
 
-- [ ] If the prompt matches a sibling workflow, route there without asking.
-- [ ] If vague, ask one disambiguating question.
-- [ ] Do not answer implementation questions from this skill — load the sibling first.
-- [ ] Framework upgrades always go to upstream `prisma-next-extension-upgrade`, not a local skill.
+- [ ] If the prompt matches adoption or queries, route directly — do not answer from this skill.
+- [ ] If the user lacks a Prisma Next Postgres project, route to `prisma-next-quickstart` before ltree adoption.
+- [ ] Do not attempt full setup or query examples from this skill — load the specific skill first.

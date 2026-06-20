@@ -1,39 +1,56 @@
 # prisma-ltree agent skills
 
-Focused agent skills for developing and extending the `@prisma-next/extension-ltree` package. Each skill covers one workflow — not a monolithic catch-all.
+Agent skills for [prisma-ltree](https://github.com/slovakian/prisma-ltree) — typed PostgreSQL `ltree` support in [Prisma Next](https://github.com/prisma/prisma-next) apps.
 
-Install with the [skills CLI](https://github.com/vercel-labs/skills):
+> **Install the skills version that matches your `prisma-ltree` and `@prisma-next/*` pins.** The skill cluster documents the extension surface at the framework version the package was validated against (today `@prisma-next/*@0.14.0`).
+
+## What's in the box
+
+One repo path, three consumer skills. Each skill is a `SKILL.md` whose `description` field an agent runtime matches against the user's prompt:
+
+| Skill                   | Scope                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `prisma-ltree`          | Router — catches vague ltree / hierarchy / taxonomy prompts and routes to a specific skill.                                      |
+| `prisma-ltree-adoption` | Install `prisma-ltree`, wire control/runtime/contract, apply the `CREATE EXTENSION ltree` baseline, model paths in the contract. |
+| `prisma-ltree-queries`  | Write hierarchy, pattern-match, scalar, concat, and array first-match queries against `ltree` / `ltree[]` columns.               |
+
+These skills assume the user already has (or is setting up) a **Postgres-target Prisma Next app**. For base Prisma Next workflows — init, contract emit, migrations, `db.ts`, generic queries — install the upstream cluster first:
 
 ```bash
-# From a clone of this repo (local path)
-pnpm dlx skills add ./skills --all
-
-# From GitHub (when published)
-pnpm dlx skills add <owner>/prisma-ltree/skills --all
+pnpm dlx skills add prisma/prisma-next#v0.14.0 --all
 ```
 
-For a single agent runtime, swap `--all` for `-a <agent>` (e.g. `-a cursor`).
+## Install
 
-Also install the upstream Prisma Next extension-author skill for framework upgrades:
+From an existing Prisma Next project (or after `prisma-next init`):
 
 ```bash
-pnpm dlx skills add prisma/prisma-next/skills/extension-author --all
+# Installs every prisma-ltree skill for every agent runtime the CLI detects.
+pnpm dlx skills add slovakian/prisma-ltree --all
 ```
 
-## Skill index
+Pin to a release tag when you need the skill text to match a specific published version:
 
-| Skill                                                       | When to use                                                      |
-| ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| [prisma-ltree](./prisma-ltree/SKILL.md)                     | Vague prompts — routes to the right workflow skill               |
-| [prisma-ltree-onboard](./prisma-ltree-onboard/SKILL.md)     | First session, architecture questions, loading reference context |
-| [prisma-ltree-codec](./prisma-ltree-codec/SKILL.md)         | Codecs, column helpers, encode/decode validation                 |
-| [prisma-ltree-operators](./prisma-ltree-operators/SKILL.md) | Query operators, SQL lowering templates, ADR-governed API shapes |
-| [prisma-ltree-test](./prisma-ltree-test/SKILL.md)           | Unit, golden, integration, and type-level tests                  |
-| [prisma-ltree-develop](./prisma-ltree-develop/SKILL.md)     | Format, lint, typecheck, build, coverage, `ready` validation     |
+```bash
+pnpm dlx skills add slovakian/prisma-ltree#v0.1.0 --all
+```
 
-## Design principles
+Skills install at the **project level** (same as upstream Prisma Next skills). For a single agent runtime, swap `--all` for `-a <agent>` (e.g. `-a cursor`, `-a claude-code`).
 
-- **One skill, one workflow.** Router skill (`prisma-ltree`) disambiguates; siblings do the work.
-- **Docs live in the repo.** Skills point at `docs/` and `.sync/prisma-next/` — they don't duplicate full references inline.
-- **Sync before SPI work.** Run `pnpm run sync-docs` before consulting upstream reference implementations.
-- **Feature truth.** `docs/feature-support.md` is the authoritative matrix for supported vs planned vs out-of-scope.
+## Version alignment
+
+| Package            | Role                                                                           |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `prisma-ltree@…`   | Extension npm package — query operators, codecs, baseline migration            |
+| `@prisma-next/*@…` | Framework pin baked into `prisma-ltree`'s `package.json` — must match your app |
+| Skills git ref     | Should track the same release as `prisma-ltree` when possible                  |
+
+Before upgrading `@prisma-next/*` past the extension's pinned minor, check for a newer `prisma-ltree` release. The upstream `prisma-next-upgrade` skill enforces extension pins automatically.
+
+## Contributing
+
+Authoring rules for skills in this directory: [`DEVELOPING.md`](./DEVELOPING.md).
+
+## License
+
+Apache-2.0 — same as the extension package.

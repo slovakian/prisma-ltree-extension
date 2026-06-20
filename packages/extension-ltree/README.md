@@ -34,7 +34,17 @@ The single source of truth for what is supported, planned, or out-of-scope is
 pnpm add prisma-ltree
 ```
 
-Requires Node `>=24` and `@prisma-next/*@0.14.0`.
+Requires Node `>=24` and `@prisma-next/*@0.14.0` (exact pin — see
+[`docs/prisma-next/versioning-and-compatibility.md`](../../docs/prisma-next/versioning-and-compatibility.md)).
+
+### Agent skills
+
+Consumer agent skills (adoption, queries, router) ship in this repo under
+[`skills/`](../../skills/). Install alongside the Prisma Next skill cluster:
+
+```bash
+pnpm dlx skills add slovakian/prisma-ltree --all
+```
 
 ## Database Setup
 
