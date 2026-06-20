@@ -169,7 +169,7 @@ lands with unit + integration tests before expanding.
   - **Dependencies:** Tasks 3.1, 3.2 (signatures must be final first)
   - **Files:** `test/codec-types.test-d.ts`, `test/operation-types.test-d.ts`
   - **Scope:** M (2 type-test files)
-  - **Note:** Confirm vitest type-testing is enabled in the `test` block of `vite.config.ts` (`typecheck`/`*.test-d.ts` glob) — Vite+ may need the type-test runner turned on; check `node_modules/vite-plus/docs/guide/test.md` and `packages/utils` for the convention. If Vite+ doesn't run `.test-d.ts`, fall back to a `tsc --noEmit`-style assertion compiled under the package tsconfig and flag.
+  - **Note:** Confirm vitest type-testing is enabled in the `test` block of `vite.config.ts` (`typecheck`/`*.test-d.ts` glob) — Vite+ may need the type-test runner turned on; check `node_modules/vite-plus/docs/guide/test.md` for the convention. If Vite+ doesn't run `.test-d.ts`, fall back to a `tsc --noEmit`-style assertion compiled under the package tsconfig and flag.
   - **Notes:** Vite+ type-testing **enabled** via `test.typecheck.enabled: true` + `include: ['**/*.test-d.ts']` in `vite.config.ts` (`vite-plus/test` re-exports `expectTypeOf`; checker is `tsc`). `vp test` now reports "Type Errors: no errors" alongside runtime tests (9 files, 72 tests). `codec-types.test-d.ts` (codecId/traits literals, `CodecTypes` input/output, `@ts-expect-error` for absent ids, `Ltree` brand) + `operation-types.test-d.ts` (built a local `TestCT` covering all referenced codec ids; asserts the full 10-op key set, return codecs, arg acceptance incl. `string[]` for matchesLqueryArray, optional `subpath`/`indexOf` args, lca's required 2nd path).
 
 ### Checkpoint 2: Tier 1 complete ✅

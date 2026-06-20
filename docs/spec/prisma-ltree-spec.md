@@ -115,7 +115,6 @@ vp env doctor                    # diagnose setup/runtime/package-manager issues
 prisma-ltree/
   packages/
     extension-ltree/        # THE extension pack (prisma-ltree)
-    utils/                  # Vite+ starter scaffold (reference only — do not modify)
   apps/
     website/                # Documentation website (Vite+)
   docs/
