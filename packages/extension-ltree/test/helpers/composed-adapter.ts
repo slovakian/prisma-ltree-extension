@@ -1,8 +1,14 @@
+import postgresAdapterControlDescriptor from "@prisma-next/adapter-postgres/control";
 import postgresRuntimeAdapterDescriptor from "@prisma-next/adapter-postgres/runtime";
+import sqlFamilyDescriptor from "@prisma-next/family-sql/control";
+import type { SqlControlAdapter } from "@prisma-next/family-sql/control-adapter";
+import type { ControlExtensionDescriptor } from "@prisma-next/framework-components/control";
+import { createControlStack } from "@prisma-next/framework-components/control";
 import type {
   RuntimeExtensionDescriptor,
   RuntimeTargetDescriptor,
 } from "@prisma-next/framework-components/execution";
+import postgresTargetControlDescriptor from "@prisma-next/target-postgres/control";
 
 const stubRuntimeTarget: RuntimeTargetDescriptor<"sql", "postgres"> = {
   kind: "target",
@@ -31,4 +37,20 @@ export function createComposedPostgresAdapter(options: {
     driver: undefined,
     extensionPacks: options.extensionPacks,
   });
+}
+
+/**
+ * Build a stack-composed Postgres control adapter for tests that exercise
+ * extension codecs on the control plane. Mirrors the pgvector reference helper.
+ */
+export function createComposedPostgresControlAdapter(options: {
+  readonly extensionPacks: readonly ControlExtensionDescriptor<"sql", "postgres">[];
+}): SqlControlAdapter<"postgres"> {
+  const stack = createControlStack({
+    family: sqlFamilyDescriptor,
+    target: postgresTargetControlDescriptor,
+    adapter: postgresAdapterControlDescriptor,
+    extensionPacks: options.extensionPacks,
+  });
+  return postgresAdapterControlDescriptor.create(stack) as SqlControlAdapter<"postgres">;
 }

@@ -84,8 +84,17 @@ describe("ltree Tier 1 operations — PGlite end-to-end", () => {
     return res.rows[0]?.v;
   }
 
-  it("isAncestorOf: path @> 'Top.Science.Astronomy'", async () => {
-    expect(await whereIds(opExpr("isAncestorOf", "Top.Science.Astronomy"))).toEqual([1, 2, 3]);
+  it("isAncestorOf: lowers to @> $1::ltree and selects ancestor rows", async () => {
+    const predicate = opExpr("isAncestorOf", "Top.Science.Astronomy");
+    const ast = SelectAst.from(TableSource.named("node"))
+      .withProjection([ProjectionItem.of("id", ColumnRef.of("node", "id"))])
+      .withWhere(predicate)
+      .withOrderBy([OrderByItem.asc(ColumnRef.of("node", "id"))]);
+    const stmt = adapter.lower(ast, { contract });
+
+    expect(stmt.sql).toContain('"node"."path" @> $1::ltree');
+    expect(paramValues(stmt)).toEqual(["Top.Science.Astronomy"]);
+    expect(await whereIds(predicate)).toEqual([1, 2, 3]);
   });
 
   it("isDescendantOf: path <@ 'Top.Science'", async () => {
