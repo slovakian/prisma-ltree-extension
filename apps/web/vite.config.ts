@@ -14,7 +14,7 @@ const SERVER_ENTRY = "virtual:tanstack-start-server-entry";
 /**
  * Serves TanStack Start's SSR handler in dev under Vite+.
  *
- * ⚠️  TEMPORARY FIX — see ../../BANDAIDS.md#vite--tanstack-start-ssr-dev-server
+ * ⚠️  TEMPORARY FIX — see ../../docs/temporary-fixes.md#vite--tanstack-start-ssr-dev-server
  *
  * TanStack Start's built-in dev-server plugin only mounts its SSR middleware
  * when `isRunnableDevEnvironment(server.environments.ssr)` is true. Vite+'s SSR
