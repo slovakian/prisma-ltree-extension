@@ -26,6 +26,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 11.7.0
           run_install: false
 
       - name: Setup Node.js
@@ -38,7 +39,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy
-        run: pnpm exec alchemy deploy --stage ${{ env.STAGE }}
+        run: pnpm exec alchemy deploy --stage ${{ env.STAGE }} --yes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -58,6 +59,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 11.7.0
           run_install: false
 
       - name: Setup Node.js
@@ -77,7 +79,7 @@ jobs:
           fi
 
       - name: Destroy Preview Environment
-        run: pnpm exec alchemy destroy --stage ${{ env.STAGE }}
+        run: pnpm exec alchemy destroy --stage ${{ env.STAGE }} --yes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
