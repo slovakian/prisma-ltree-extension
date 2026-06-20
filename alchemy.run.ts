@@ -1,11 +1,14 @@
 // alchemy.run.ts
 import * as Alchemy from "alchemy";
+import { Stage } from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as GitHub from "alchemy/GitHub";
 import * as Output from "alchemy/Output";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Path } from "effect/Path";
+
+const DOCS_DOMAIN = "prisma-ltree.procka.org";
 
 export default Alchemy.Stack(
   "PrismaLtreeDocs",
@@ -15,9 +18,11 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const path = yield* Path;
+    const stage = yield* Stage;
 
     const docs = yield* Cloudflare.Vite("Docs", {
       rootDir: path.resolve(import.meta.dirname, "apps/web"),
+      ...(stage === "prod" ? { domain: DOCS_DOMAIN } : {}),
       compatibility: {
         flags: ["nodejs_compat"],
       },
