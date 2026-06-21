@@ -1,30 +1,30 @@
 ---
 title: Introduction
-description: PostgreSQL ltree extension for Prisma
+description: PostgreSQL ltree extension for Prisma Next
 ---
 
 # prisma-ltree
 
-PostgreSQL `ltree` brings hierarchical tree data structures to Prisma. The extension provides operators and functions for querying tree-structured data efficiently.
+PostgreSQL `ltree` brings hierarchical tree data structures to **Prisma Next**. The extension pack provides typed codecs, query operators, and a baseline migration for querying tree-structured data without raw SQL.
 
 ## What is ltree?
 
-The PostgreSQL `ltree` type represents a label tree — a path-like data type designed for hierarchical queries. Trees are stored as dot-separated labels (e.g., `1.2.3` or `root.child.grandchild`).
+The PostgreSQL `ltree` type represents a label tree — a path-like data type designed for hierarchical queries. Trees are stored as dot-separated labels (e.g. `Top.Science.Astronomy` or `electronics.computers.laptops`).
 
 Common use cases:
 
 - Organization hierarchies
 - Filesystem-like structures
 - Category trees
-- Organizational trees with ancestor/descendant queries
+- Taxonomies with ancestor/descendant queries
 
 ## Getting Started
 
-Start with the [Getting Started](/docs/getting-started) guide to install and configure the extension in your Prisma schema.
+Start with the [Getting Started](/docs/getting-started) guide to install the pack, declare `ltree()` columns in your contract, wire the runtime, and run your first queries.
 
 ## Query Operations
 
 Learn the available operators for querying tree structures:
 
 - [Hierarchy Operators](/docs/operations/hierarchy) — ancestor and descendant checks
-- [Pattern Matching Operators](/docs/operations/pattern-matching) — powerful path pattern queries
+- [Pattern Matching Operators](/docs/operations/pattern-matching) — `lquery` and `ltxtquery` patterns

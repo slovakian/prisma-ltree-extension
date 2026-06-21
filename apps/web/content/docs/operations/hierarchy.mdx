@@ -5,76 +5,102 @@ description: Ancestor and descendant checks for tree paths
 
 # Hierarchy Operators
 
-Hierarchy operators allow you to check whether one path is an ancestor or descendant of another.
+Hierarchy operators check whether a row's `ltree` path is an ancestor or descendant of another path. They are methods on **ltree column references** in the SQL query builder.
+
+```typescript
+import { db } from "../prisma/db";
+import { param } from "@prisma-next/sql-query/param";
+
+const category = db.schema.tables.category;
+```
+
+PostgreSQL compares the **row's path as the left operand**:
+
+| SQL      | Meaning                               |
+| -------- | ------------------------------------- |
+| `A @> B` | A is an **ancestor** of B (or equal)  |
+| `A <@ B` | A is a **descendant** of B (or equal) |
+
+Both comparisons are **inclusive** of the argument path.
 
 ## isAncestorOf()
 
-Check if a path is an ancestor of another path.
+Returns rows whose path is an ancestor of the argument.
 
 ```typescript
-const result = await prisma.category.findMany({
-  where: {
-    path: {
-      isAncestorOf: "electronics.computers",
-    },
-  },
-});
+const plan = db.sql
+  .from(category)
+  .select({ id: category.columns.id, path: category.columns.path })
+  .where(category.columns.path.isAncestorOf(param("target")))
+  .build({ params: { target: "electronics.computers" } });
+
+const rows = await db.runtime().execute(plan);
 ```
 
-This returns all paths that are ancestors of `electronics.computers`. For example:
+Given `electronics.computers` as the argument:
 
-- `electronics` — matches (parent)
-- `electronics.computers` — does NOT match (equal, not ancestor)
-- `electronics.computers.laptops` — does NOT match (descendant)
+- `electronics` — matches (ancestor)
+- `electronics.computers` — matches (`@>` is inclusive of equality)
+- `electronics.computers.laptops` — does NOT match (descendant, not an ancestor)
 
-**SQL equivalent:** `ltree @> ltree`
+**SQL equivalent:** `path @> $1::ltree`
 
 ## isDescendantOf()
 
-Check if a path is a descendant of another path.
+Returns rows whose path is a descendant of the argument — the usual choice for "everything under this prefix."
 
 ```typescript
-const result = await prisma.category.findMany({
-  where: {
-    path: {
-      isDescendantOf: "electronics",
-    },
-  },
-});
+const plan = db.sql
+  .from(category)
+  .select({ id: category.columns.id, path: category.columns.path })
+  .where(category.columns.path.isDescendantOf(param("prefix")))
+  .build({ params: { prefix: "electronics" } });
+
+const rows = await db.runtime().execute(plan);
 ```
 
-This returns all paths that are descendants of `electronics`. For example:
+Given `electronics` as the argument:
 
-- `electronics` — does NOT match (equal, not descendant)
+- `electronics` — matches (equal; `<@` is inclusive)
 - `electronics.computers` — matches (child)
 - `electronics.computers.laptops` — matches (grandchild)
 
-**SQL equivalent:** `ltree <@ ltree`
+**SQL equivalent:** `path <@ $1::ltree`
+
+Mnemonic: **`isDescendantOf(prefix)`** → "my path sits under this prefix."
 
 ## Examples
 
-**Finding all subcategories of "electronics":**
+**All subcategories under `electronics`:**
 
 ```typescript
-const subcategories = await prisma.category.findMany({
-  where: {
-    path: {
-      isDescendantOf: "electronics",
-    },
-  },
-  orderBy: { path: "asc" },
-});
+const subcategories = db.sql
+  .from(category)
+  .select({ id: category.columns.id, path: category.columns.path })
+  .where(category.columns.path.isDescendantOf(param("prefix")))
+  .build({ params: { prefix: "electronics" } });
+
+await db.runtime().execute(subcategories);
 ```
 
-**Finding all ancestor categories:**
+**All ancestors of a deep path:**
 
 ```typescript
-const ancestors = await prisma.category.findMany({
-  where: {
-    path: {
-      isAncestorOf: "electronics.computers.laptops",
-    },
-  },
-  orderBy: { path: "asc" },
-});
+const ancestors = db.sql
+  .from(category)
+  .select({ id: category.columns.id, path: category.columns.path })
+  .where(category.columns.path.isAncestorOf(param("target")))
+  .build({ params: { target: "electronics.computers.laptops" } });
+
+await db.runtime().execute(ancestors);
+```
+
+## ORM lane (optional)
+
+When your app uses `@prisma-next/sql-orm-client`, the same methods appear on ltree-typed fields:
+
+```typescript
+const rows = await db.orm.Category.where((c) => c.path.isDescendantOf("electronics"))
+  .select("id", "path")
+  .all();
 ```

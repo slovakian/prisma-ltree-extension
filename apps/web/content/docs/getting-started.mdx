@@ -1,81 +1,142 @@
 ---
 title: Getting Started
-description: Install and configure prisma-ltree in your project
+description: Install and configure prisma-ltree in a Prisma Next Postgres app
 ---
 
 # Getting Started
 
-This guide will help you install and configure `@prisma-next/extension-ltree` in your Prisma project.
+This guide wires the `prisma-ltree` extension pack into a **Prisma Next** Postgres project. It assumes you already have a Prisma Next app scaffold (`prisma-next.config.ts`, emitted contract, and a `db.ts` runtime entrypoint).
 
 ## Installation
 
 <InstallCommand />
 
-## Setup in Prisma Schema
+`prisma-ltree` pins exact `@prisma-next/*` versions — align your framework packages with the extension's peer dependency before continuing.
 
-Once installed, add the extension to your Prisma schema:
+## Configuration
 
-```prisma
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["traitExtensions"]
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-extension ltree {
-  package = "@prisma-next/extension-ltree"
-}
-
-model Category {
-  id   Int      @id @default(autoincrement())
-  path Ltree    @db.Ltree
-  name String
-
-  @@index([path], type: Gist)
-}
-```
-
-## Creating a Table
-
-The extension adds the `Ltree` type for use in your models. PostgreSQL will automatically create the `ltree` extension on first use:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS ltree;
-```
-
-This happens automatically when you run migrations with Prisma.
-
-## Using Tree Paths
-
-Insert tree-structured data into your database:
+Register the pack in `prisma-next.config.ts`:
 
 ```typescript
-const electronics = await prisma.category.create({
-  data: {
-    path: "electronics",
-    name: "Electronics",
-  },
-});
+import ltree from "prisma-ltree/control";
+import { defineConfig } from "@prisma-next/postgres/config";
 
-const computers = await prisma.category.create({
-  data: {
-    path: "electronics.computers",
-    name: "Computers",
-  },
-});
-
-const laptops = await prisma.category.create({
-  data: {
-    path: "electronics.computers.laptops",
-    name: "Laptops",
+export default defineConfig({
+  contract: "./src/prisma/contract.ts",
+  extensions: [ltree],
+  db: {
+    connection: process.env.DATABASE_URL!,
   },
 });
 ```
 
-## Basic Queries
+Projects using the verbose multi-import config shape use the same control import with `extensionPacks: [ltree]` instead of `extensions`.
 
-Once you have tree data set up, you can query relationships between paths using the operators documented in the [Operations](/docs/operations/hierarchy) section.
+## Contract (TypeScript)
+
+Declare `ltree` columns in a **TypeScript contract** with `ltree()` from `prisma-ltree/column-types`. PSL authoring for ltree types is not available yet — pgvector-style `types { … = ltree.Ltree }` blocks in `contract.prisma` are not supported.
+
+```typescript
+import { int4Column, textColumn } from "@prisma-next/adapter-postgres/column-types";
+import sqlFamily from "@prisma-next/family-sql/pack";
+import { defineContract, field, model } from "@prisma-next/sql-contract-ts/contract-builder";
+import { ltree } from "prisma-ltree/column-types";
+import ltreePack from "prisma-ltree/pack";
+import postgres from "@prisma-next/target-postgres/pack";
+
+export const contract = defineContract({
+  family: sqlFamily,
+  target: postgres,
+  extensionPacks: { ltree: ltreePack },
+  models: {
+    Category: model("Category", {
+      fields: {
+        id: field.column(int4Column).id(),
+        name: field.column(textColumn),
+        path: field.column(ltree()),
+      },
+    }).sql({ table: "category" }),
+  },
+});
+```
+
+Re-emit after contract edits:
+
+```bash
+pnpm prisma-next contract emit
+```
+
+## Runtime
+
+Register codecs and query operations at execute time:
+
+```typescript
+import ltree from "prisma-ltree/runtime";
+import postgres from "@prisma-next/postgres/runtime";
+import type { Contract } from "./contract.d";
+import contractJson from "./contract.json" with { type: "json" };
+
+export const db = postgres<Contract>({
+  contractJson,
+  extensions: [ltree],
+  url: process.env.DATABASE_URL!,
+});
+```
+
+Control and contract wiring alone are not enough — queries fail or lack ltree methods without `prisma-ltree/runtime` in `extensions`.
+
+## Database setup
+
+The pack ships a baseline migration that runs `CREATE EXTENSION IF NOT EXISTS ltree`. Apply it with Prisma Next's control plane:
+
+```bash
+pnpm prisma-next db init
+```
+
+For projects using migration history, use `migration plan` and `migrate` instead. On brownfield databases that already have `ltree` enabled, emit the contract and run `db sign` / `db verify` to align the marker.
+
+## Inserting tree paths
+
+Paths are plain strings validated by the codec (dot-separated labels, e.g. `electronics.computers.laptops`). Build and insert them in application code:
+
+```typescript
+import { db } from "./prisma/db";
+
+const category = db.schema.tables.category;
+
+async function seedCategories() {
+  const runtime = await db.runtime();
+
+  await runtime.execute(
+    db.sql.public.category
+      .insert([
+        { path: "electronics", name: "Electronics" },
+        { path: "electronics.computers", name: "Computers" },
+        { path: "electronics.computers.laptops", name: "Laptops" },
+      ])
+      .returning("id", "path", "name")
+      .build(),
+  );
+}
+```
+
+## Basic queries
+
+Ltree operators attach to **column references** in the SQL query builder (or on ltree fields in the optional ORM lane). They do not appear as nested Prisma Client `where` objects.
+
+```typescript
+import { db } from "./prisma/db";
+import { param } from "@prisma-next/sql-query/param";
+
+const category = db.schema.tables.category;
+
+const plan = db.sql
+  .from(category)
+  .select({ id: category.columns.id, path: category.columns.path })
+  .where(category.columns.path.isDescendantOf(param("prefix")))
+  .build({ params: { prefix: "electronics" } });
+
+const rows = await db.runtime().execute(plan);
+```
+
+See [Hierarchy Operators](/docs/operations/hierarchy) and [Pattern Matching](/docs/operations/pattern-matching) for the full operator set.
