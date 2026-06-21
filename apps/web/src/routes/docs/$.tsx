@@ -1,35 +1,56 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Suspense } from "react";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { source } from "@/lib/source";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
+import browserCollections from "collections/browser";
+import { getMDXComponents } from "@/components/mdx";
 import { baseOptions } from "@/lib/layout.shared";
-import { useMDXComponents } from "@/components/mdx";
+import { source } from "@/lib/source";
 
 export const Route = createFileRoute("/docs/$")({
-  loader: ({ params }) => {
-    const slug = params._splat || "";
-    const page = source.getPage(slug ? slug.split("/") : []);
-    if (!page) {
-      throw new Error("404");
-    }
-    return page;
+  component: Page,
+  loader: async ({ params }) => {
+    const slugs = params._splat ? params._splat.split("/") : [];
+    const data = await serverLoader({ data: slugs });
+    await clientLoader.preload(data.path);
+    return data;
   },
-  component: DocsPage,
-  notFoundComponent: () => <div className="p-4">Page not found</div>,
 });
 
-function DocsPage() {
-  const page = Route.useLoaderData() as any;
-  const mdxComponents = useMDXComponents();
+const serverLoader = createServerFn({ method: "GET" })
+  .validator((slugs: string[]) => slugs)
+  .handler(async ({ data: slugs }) => {
+    const page = source.getPage(slugs);
+    if (!page) throw notFound();
 
-  const MDXContent = page?.data?._exports?.default;
+    return {
+      path: page.path,
+      pageTree: await source.serializePageTree(source.getPageTree()),
+    };
+  });
+
+const clientLoader = browserCollections.docs.createClientLoader({
+  component({ toc, frontmatter, default: MDX }) {
+    return (
+      <DocsPage toc={toc}>
+        <DocsTitle>{frontmatter.title}</DocsTitle>
+        <DocsDescription>{frontmatter.description}</DocsDescription>
+        <DocsBody>
+          <MDX components={getMDXComponents()} />
+        </DocsBody>
+      </DocsPage>
+    );
+  },
+});
+
+function Page() {
+  const data = useFumadocsLoader(Route.useLoaderData());
 
   return (
-    <DocsLayout {...baseOptions()} tree={source.pageTree}>
-      {MDXContent ? (
-        <MDXContent components={mdxComponents} />
-      ) : (
-        <div className="p-4">Content not found</div>
-      )}
+    <DocsLayout {...baseOptions()} tree={data.pageTree}>
+      <Suspense>{clientLoader.useContent(data.path)}</Suspense>
     </DocsLayout>
   );
 }

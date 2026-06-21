@@ -1,0 +1,81 @@
+---
+title: Getting Started
+description: Install and configure prisma-ltree in your project
+---
+
+# Getting Started
+
+This guide will help you install and configure `@prisma-next/extension-ltree` in your Prisma project.
+
+## Installation
+
+<InstallCommand />
+
+## Setup in Prisma Schema
+
+Once installed, add the extension to your Prisma schema:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["traitExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+extension ltree {
+  package = "@prisma-next/extension-ltree"
+}
+
+model Category {
+  id   Int      @id @default(autoincrement())
+  path Ltree    @db.Ltree
+  name String
+
+  @@index([path], type: Gist)
+}
+```
+
+## Creating a Table
+
+The extension adds the `Ltree` type for use in your models. PostgreSQL will automatically create the `ltree` extension on first use:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS ltree;
+```
+
+This happens automatically when you run migrations with Prisma.
+
+## Using Tree Paths
+
+Insert tree-structured data into your database:
+
+```typescript
+const electronics = await prisma.category.create({
+  data: {
+    path: "electronics",
+    name: "Electronics",
+  },
+});
+
+const computers = await prisma.category.create({
+  data: {
+    path: "electronics.computers",
+    name: "Computers",
+  },
+});
+
+const laptops = await prisma.category.create({
+  data: {
+    path: "electronics.computers.laptops",
+    name: "Laptops",
+  },
+});
+```
+
+## Basic Queries
+
+Once you have tree data set up, you can query relationships between paths using the operators documented in the [Operations](/docs/operations/hierarchy) section.

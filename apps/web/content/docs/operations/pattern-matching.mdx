@@ -1,0 +1,103 @@
+---
+title: Pattern Matching Operators
+description: Query paths using lquery and ltxtquery patterns
+---
+
+# Pattern Matching Operators
+
+Pattern matching operators allow you to query paths using powerful pattern syntax.
+
+## matchesLquery()
+
+Match a path against an `lquery` pattern. The pattern syntax allows wildcards and bracket expressions.
+
+```typescript
+const result = await prisma.category.findMany({
+  where: {
+    path: {
+      matchesLquery: "*.computers.*",
+    },
+  },
+});
+```
+
+Pattern syntax:
+
+- `*` — matches exactly one label
+- `**` — matches one or more labels
+- `{a,b,c}` — matches any one of the labels
+- Numbers — match specific label positions
+
+**SQL equivalent:** `ltree ~ lquery`
+
+### Examples
+
+**Match any path two levels deep:**
+
+```typescript
+const twoLevelPaths = await prisma.category.findMany({
+  where: {
+    path: {
+      matchesLquery: "*.*",
+    },
+  },
+});
+```
+
+**Match paths with "computer" at any level:**
+
+```typescript
+const computerPaths = await prisma.category.findMany({
+  where: {
+    path: {
+      matchesLquery: "**.computer.**",
+    },
+  },
+});
+```
+
+## matchesLqueryArray()
+
+Match a path against multiple `lquery` patterns (array of patterns). The path matches if it matches any pattern in the array.
+
+```typescript
+const result = await prisma.category.findMany({
+  where: {
+    path: {
+      matchesLqueryArray: ["electronics.*", "software.*"],
+    },
+  },
+});
+```
+
+This returns paths matching either pattern.
+
+**SQL equivalent:** `ltree ? lquery[]`
+
+## matchesLtxtquery()
+
+Match a path against an `ltxtquery` pattern, which supports more advanced text-based pattern matching with boolean operators.
+
+```typescript
+const result = await prisma.category.findMany({
+  where: {
+    path: {
+      matchesLtxtquery: "computer | phone",
+    },
+  },
+});
+```
+
+**SQL equivalent:** `ltree @ ltxtquery`
+
+## Pattern Syntax Reference
+
+| Syntax   | Meaning                 | Example                                  |
+| -------- | ----------------------- | ---------------------------------------- |
+| `*`      | One label               | `a.*.c` matches `a.b.c`                  |
+| `**`     | One or more labels      | `a.**.c` matches `a.b.c` and `a.b.d.c`   |
+| `{a,b}`  | Label alternatives      | `{a,b}.c` matches `a.c` or `b.c`         |
+| `a \| b` | Boolean OR (ltxtquery)  | `a \| b` matches paths with either label |
+| `a & b`  | Boolean AND (ltxtquery) | `a & b` matches paths with both labels   |
+
+Refer to [PostgreSQL ltree documentation](https://www.postgresql.org/docs/current/ltree.html) for full pattern syntax details.

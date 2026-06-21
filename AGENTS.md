@@ -39,11 +39,23 @@ This project builds `@prisma-next/extension-ltree`, an extension pack for Postgr
 packages/
   extension-ltree/           # The ltree extension pack
 apps/
-  website/                   # Documentation website (Vite+)
+  web/                       # Documentation website (Vite+ + Fumadocs)
 docs/
   prisma-next/               # prisma-next extension architecture docs
   ltree/                     # PostgreSQL ltree reference docs
+  spec/                      # Fumadocs docs site spec & plan
 ```
+
+## Docs Site Implementation
+
+Working on `apps/web` documentation? Start here:
+
+- **Guide:** `apps/web/AGENTS.md` — step-by-step tasks, skills, and common patterns
+- **Plan:** `docs/spec/fumadocs-docs-site-plan.md` — full implementation roadmap
+- **Handoff:** `docs/spec/fumadocs-docs-site-handoff.md` — task completion status and next steps
+- **Spec:** `docs/spec/fumadocs-docs-site-spec.md` — assumptions and architecture
+
+**Current status:** Tasks 1–7 complete, Task 8 (search) deferred, Task 9 ready to start.
 
 ## Synced External References
 

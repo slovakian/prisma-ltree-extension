@@ -141,7 +141,7 @@ function Home() {
           lowest-common-ancestor — without writing raw SQL.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button render={<a href="#setup" />} nativeButton={false}>
+          <Button render={<a href="/docs/getting-started" />} nativeButton={false}>
             Get started
           </Button>
           <Button variant="outline" render={<a href={GITHUB_URL} />} nativeButton={false}>
@@ -234,6 +234,9 @@ function Home() {
             <code>prisma-ltree</code> · Apache-2.0
           </p>
           <nav className="flex gap-4">
+            <a href="/docs" className="underline underline-offset-4 hover:text-foreground">
+              Docs
+            </a>
             <a href={GITHUB_URL} className="underline underline-offset-4 hover:text-foreground">
               GitHub
             </a>

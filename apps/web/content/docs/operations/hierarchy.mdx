@@ -1,0 +1,80 @@
+---
+title: Hierarchy Operators
+description: Ancestor and descendant checks for tree paths
+---
+
+# Hierarchy Operators
+
+Hierarchy operators allow you to check whether one path is an ancestor or descendant of another.
+
+## isAncestorOf()
+
+Check if a path is an ancestor of another path.
+
+```typescript
+const result = await prisma.category.findMany({
+  where: {
+    path: {
+      isAncestorOf: "electronics.computers",
+    },
+  },
+});
+```
+
+This returns all paths that are ancestors of `electronics.computers`. For example:
+
+- `electronics` — matches (parent)
+- `electronics.computers` — does NOT match (equal, not ancestor)
+- `electronics.computers.laptops` — does NOT match (descendant)
+
+**SQL equivalent:** `ltree @> ltree`
+
+## isDescendantOf()
+
+Check if a path is a descendant of another path.
+
+```typescript
+const result = await prisma.category.findMany({
+  where: {
+    path: {
+      isDescendantOf: "electronics",
+    },
+  },
+});
+```
+
+This returns all paths that are descendants of `electronics`. For example:
+
+- `electronics` — does NOT match (equal, not descendant)
+- `electronics.computers` — matches (child)
+- `electronics.computers.laptops` — matches (grandchild)
+
+**SQL equivalent:** `ltree <@ ltree`
+
+## Examples
+
+**Finding all subcategories of "electronics":**
+
+```typescript
+const subcategories = await prisma.category.findMany({
+  where: {
+    path: {
+      isDescendantOf: "electronics",
+    },
+  },
+  orderBy: { path: "asc" },
+});
+```
+
+**Finding all ancestor categories:**
+
+```typescript
+const ancestors = await prisma.category.findMany({
+  where: {
+    path: {
+      isAncestorOf: "electronics.computers.laptops",
+    },
+  },
+  orderBy: { path: "asc" },
+});
+```
