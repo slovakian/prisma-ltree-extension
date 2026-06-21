@@ -8,25 +8,19 @@ them with type-safe, prisma-native operators — ancestor/descendant checks, `lq
 pattern matching, path manipulation, and lowest-common-ancestor computation — without dropping to
 raw SQL.
 
-## Overview
+## Features
 
-This extension pack provides:
-
-- **`pg/ltree@1` codec** — `string ↔ string` with label-syntax + length validation (traits
-  `['equality', 'order']`).
-- **`pg/ltree-array@1` codec** — `string[] ↔ string[]` with per-element validation, for the
-  `ltree[]` first-match operators (see [ADR-003](../../docs/decisions/ADR-003-array-receiver.md)).
-- **`ltree()` / `ltreeArray()` column helpers** — non-parameterized columns with `nativeType`
-  `'ltree'` / `'ltree[]'`.
-- **Query operators** — hierarchy, pattern-match, scalar functions, concatenation, conversion, and
-  array first-match operators (full list under [Operations](#operations)).
+- **`ltree` and `ltree[]` columns** — `ltree()` / `ltreeArray()` column helpers
+- **Hierarchy operators** — ancestor and descendant checks
+- **Pattern matching** — `lquery`, `lquery[]`, and `ltxtquery`
+- **Scalar functions** — depth, subpaths, label index, lowest common ancestor
+- **Concatenation & conversion** — path building and `ltree` ↔ `text` conversion
+- **Array first-match** — find the first matching path in an `ltree[]` column
 - **Baseline migration** — installs the Postgres extension via
-  `CREATE EXTENSION IF NOT EXISTS ltree` (invariantId `ltree:install-ltree-v1`).
-- **Multi-plane entrypoints** — `/control`, `/runtime`, `/column-types`, `/codec-types`,
-  `/operation-types`, `/pack`.
+  `CREATE EXTENSION IF NOT EXISTS ltree` when the pack is composed
 
-The single source of truth for what is supported, planned, or out-of-scope is
-[`docs/feature-support.md`](../../docs/feature-support.md).
+See the [feature support matrix](https://github.com/slovakian/prisma-ltree/blob/main/docs/feature-support.md)
+for what is supported, planned, or out of scope.
 
 ## Installation
 
@@ -35,18 +29,18 @@ pnpm add prisma-ltree
 ```
 
 Requires Node `>=24` and `@prisma-next/*@0.14.0` (exact pin — see
-[`docs/prisma-next/versioning-and-compatibility.md`](../../docs/prisma-next/versioning-and-compatibility.md)).
+[versioning & compatibility](https://github.com/slovakian/prisma-ltree/blob/main/docs/prisma-next/versioning-and-compatibility.md)).
 
-### Agent skills
+### Agent skills (optional)
 
-Consumer agent skills (adoption, queries, router) ship in this repo under
-[`skills/`](../../skills/). Install alongside the Prisma Next skill cluster:
+Agent skills for adoption and query patterns ship in the repo under
+[`skills/`](https://github.com/slovakian/prisma-ltree/tree/main/skills):
 
 ```bash
 pnpm dlx skills add slovakian/prisma-ltree --all
 ```
 
-## Database Setup
+## Database setup
 
 The extension ships an on-disk baseline migration that installs `ltree` when the pack is composed
 into an application. `prisma-next db init` / `db update` apply it automatically. The equivalent
@@ -77,7 +71,7 @@ export default defineConfig({
 
 ## Usage
 
-### Contract Definition
+### Contract definition
 
 ```typescript
 import { int4Column, textColumn } from "@prisma-next/adapter-postgres/column-types";
@@ -103,7 +97,7 @@ export const contract = defineContract({
 });
 ```
 
-### Runtime Setup
+### Runtime setup
 
 ```typescript
 import { instantiateExecutionStack } from "@prisma-next/framework-components/execution";
@@ -121,7 +115,7 @@ const context = createExecutionContext({ contract, stack });
 const stackInstance = instantiateExecutionStack(stack);
 ```
 
-### Query Usage
+### Query usage
 
 ```typescript
 import { sql, tables } from "../prisma/query";
@@ -140,9 +134,6 @@ const plan = sql
 
 ## Operations
 
-All boolean operators return `pg/bool@1`. See
-[`docs/feature-support.md`](../../docs/feature-support.md) for the authoritative matrix.
-
 ### Hierarchy (→ boolean)
 
 | Method                     | SQL              |
@@ -160,30 +151,28 @@ All boolean operators return `pg/bool@1`. See
 
 ### Scalar functions
 
-| Method                       | SQL                           | Returns      |
-| ---------------------------- | ----------------------------- | ------------ |
-| `path.nlevel()`              | `nlevel(ltree)`               | `pg/int4@1`  |
-| `path.subltree(start, end)`  | `subltree(ltree, start, end)` | `pg/ltree@1` |
-| `path.subpath(offset, len?)` | `subpath(ltree, offset, len)` | `pg/ltree@1` |
-| `path.indexOf(other, off?)`  | `index(ltree, ltree, off)`    | `pg/int4@1`  |
-| `path.lca(other, ...rest)`   | `lca(ltree, ltree, ...)`      | `pg/ltree@1` |
+| Method                       | SQL                           | Returns |
+| ---------------------------- | ----------------------------- | ------- |
+| `path.nlevel()`              | `nlevel(ltree)`               | `int`   |
+| `path.subltree(start, end)`  | `subltree(ltree, start, end)` | `ltree` |
+| `path.subpath(offset, len?)` | `subpath(ltree, offset, len)` | `ltree` |
+| `path.indexOf(other, off?)`  | `index(ltree, ltree, off)`    | `int`   |
+| `path.lca(other, ...rest)`   | `lca(ltree, ltree, ...)`      | `ltree` |
 
-`lca` is a variadic method requiring **≥2 paths** and returns the proper (strictly shorter) lowest
-common ancestor (see [ADR-001](../../docs/decisions/ADR-001-lca-api-shape.md)).
+`lca` requires **≥2 paths** and returns the proper (strictly shorter) lowest common ancestor.
 
 ### Concatenation (→ ltree) & conversion
 
-| Method                    | SQL                 | Returns      |
-| ------------------------- | ------------------- | ------------ |
-| `path.concat(rhs)`        | `ltree \|\| ltree`  | `pg/ltree@1` |
-| `path.concatText(label)`  | `ltree \|\| text`   | `pg/ltree@1` |
-| `path.prependText(label)` | `text \|\| ltree`   | `pg/ltree@1` |
-| `path.toText()`           | `ltree2text(ltree)` | `pg/text@1`  |
-| `text.toLtree()`          | `text2ltree(text)`  | `pg/ltree@1` |
+| Method                    | SQL                 | Returns |
+| ------------------------- | ------------------- | ------- |
+| `path.concat(rhs)`        | `ltree \|\| ltree`  | `ltree` |
+| `path.concatText(label)`  | `ltree \|\| text`   | `ltree` |
+| `path.prependText(label)` | `text \|\| ltree`   | `ltree` |
+| `path.toText()`           | `ltree2text(ltree)` | `text`  |
+| `text.toLtree()`          | `text2ltree(text)`  | `ltree` |
 
-`prependText` keeps the ltree column as the receiver even though it is the right operand, and
-`toLtree` is rooted on a text column (see
-[ADR-002](../../docs/decisions/ADR-002-free-function-lowering.md)).
+`prependText` keeps the ltree column as the receiver even though it is the right SQL operand.
+`toLtree` is called on a text column.
 
 ### Array first-match (→ ltree, receiver `ltree[]`)
 
@@ -194,6 +183,8 @@ common ancestor (see [ADR-001](../../docs/decisions/ADR-001-lca-api-shape.md)).
 | `paths.firstMatchLquery(pattern)`  | `ltree[] ?~ lquery`    |
 | `paths.firstMatchLtxtquery(query)` | `ltree[] ?@ ltxtquery` |
 
+Use `ltreeArray()` for `ltree[]` columns that expose these methods.
+
 ## Types
 
 ```typescript
@@ -203,21 +194,6 @@ import type { QueryOperationTypes } from "prisma-ltree/operation-types";
 // CodecTypes['pg/ltree@1']['output']       = string
 // CodecTypes['pg/ltree-array@1']['output'] = readonly string[]
 ```
-
-## Development
-
-This package is built with [Vite+](https://viteplus.dev/):
-
-```bash
-vp install        # install dependencies
-vp check          # format, lint, typecheck
-vp test           # run unit + integration + type-level tests
-vp test --coverage # enforce the 95% coverage threshold
-vp run build      # build dist/
-```
-
-Integration tests run against [PGlite](https://pglite.dev/) with the `ltree` contrib extension —
-every operator is lowered through a composed Postgres runtime adapter and executed for real.
 
 ## License
 
