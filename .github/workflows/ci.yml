@@ -28,9 +28,9 @@ jobs:
         run: |
           cd packages/extension-ltree
           vp check
-          pnpm run check-pins
+          vp run check-pins
           vp test
           vp run build
 
       - name: Publish preview package
-        run: pnpm exec pkg-pr-new publish './packages/extension-ltree' --commentWithSha --packageManager=pnpm
+        run: vp exec pkg-pr-new publish './packages/extension-ltree' --commentWithSha --packageManager=pnpm
