@@ -6,13 +6,13 @@
 
 ## Current state
 
-| Item            | Status                                                                                                                                                  |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Spec            | Approved — [`fumadocs-docs-site-spec.md`](./fumadocs-docs-site-spec.md)                                                                                 |
-| Plan            | Approved — [`fumadocs-docs-site-plan.md`](./fumadocs-docs-site-plan.md)                                                                                 |
-| Implementation  | **In progress**                                                                                                                                         |
-| **Next task**   | **Task 5** — MDX components                                                                                                                             |
-| Completed tasks | **Task 1** — Fumadocs MDX toolchain, **Task 2** — Fumadocs source loader, **Task 3** — shadcn theme + RootProvider, **Task 4** — `/docs` route + layout |
+| Item            | Status                                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Spec            | Approved — [`fumadocs-docs-site-spec.md`](./fumadocs-docs-site-spec.md)                                                                                                              |
+| Plan            | Approved — [`fumadocs-docs-site-plan.md`](./fumadocs-docs-site-plan.md)                                                                                                              |
+| Implementation  | **In progress**                                                                                                                                                                      |
+| **Next task**   | **Task 6** — Minimal docs content                                                                                                                                                    |
+| Completed tasks | **Task 1** — Fumadocs MDX toolchain, **Task 2** — Fumadocs source loader, **Task 3** — shadcn theme + RootProvider, **Task 4** — `/docs` route + layout, **Task 5** — MDX components |
 
 ### Decisions already made (do not re-ask)
 
@@ -198,6 +198,47 @@ Key notes:
 - Fumadocs source loader already in src/lib/source.ts (Task 2)
 - Follow Fumadocs TanStack Start guide for docs route patterns
 - Create src/lib/layout.shared.tsx with baseOptions() for nav title + GitHub link
+```
+
+## Task 5 Notes (completed)
+
+**Integration approach:**
+
+- Imported `CodeBlock` and `InstallCommand` components into `src/components/mdx.tsx`
+- Registered both components in the MDX component map via `getMDXComponents()` function
+- Global MDX type augmentation (`MDXProvidedComponents`) automatically updated to include the new components
+- Added temporary test content in `content/docs/index.mdx` with `<InstallCommand />` and code fence to verify rendering
+
+**All acceptance criteria met:**
+
+- ✓ `CodeBlock` registered in MDX component map
+- ✓ `InstallCommand` registered in MDX component map
+- ✓ Global MDX type augmentation present (`MDXProvidedComponents`)
+- ✓ Temporary test in stub MDX renders `<InstallCommand />` without error (dev server confirmed no console errors)
+- ✓ Code fences in MDX use Fumadocs default styling
+- ✓ `pnpm --filter web build` succeeds
+- ✓ `pnpm --filter web typecheck` passes
+- ✓ `pnpm --filter web dev` starts without runtime errors
+
+**Note:** Alert component (optional in spec) was not added as it's not required for acceptance criteria and can be added in a future iteration if callouts are needed.
+
+### Handoff blurb for Task 6 session
+
+```markdown
+Implement Task 6 from docs/spec/fumadocs-docs-site-handoff.md (Minimal docs content).
+
+Read first:
+
+- docs/spec/fumadocs-docs-site-handoff.md (Task 1, 2, 3, 4, 5 notes above)
+- Task 6 section in docs/spec/fumadocs-docs-site-plan.md
+
+Skills: documentation-and-adrs, source-driven-development
+
+Key notes:
+
+- Task 5 complete: CodeBlock and InstallCommand components registered in mdx.tsx
+- MDX components ready for use in content files
+- Verify all operator claims against docs/feature-support.md
 ```
 
 ## Task 4 Notes (completed)
