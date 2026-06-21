@@ -87,36 +87,45 @@ this clone for **reference implementations, SPI types, and test patterns**.
 
 ## Extension Pack Architecture (Four Slices)
 
-Every pack provides some subset of:
+Per [ADR 212](https://github.com/prisma/prisma-next/blob/main/docs/architecture%20docs/adrs/ADR%20212%20-%20Contract%20spaces.md), every pack provides some subset of:
 
-1. **Contract slice** — Column type descriptors, parameterized types, `CREATE EXTENSION` migration
-2. **Query-lane slice** — Typed query operators lowering to SQL templates (`{{self}}`, `{{arg0}}`)
-3. **Runtime slice** — Codecs (encode/decode), query operation implementations
-4. **Migration slice** — Contract space with baseline migration, invariantIds
+1. **Contract slice (compile-time)** — TS contract builder (`defineContract`) emitting codec-instance types, column type registrations; baseline `CREATE EXTENSION` migration
+2. **Query-lane slice (build-time)** — Typed query operators via descriptor metadata (`ltreeQueryOperations()`) lowering to SQL templates
+3. **Runtime slice (execute-time)** — Codec registry and operation implementations; loaded by execution context
+4. **Migration slice (plan/apply-time)** — Contract space with baseline migration, invariantIds, migration operations
 
 ## Multi-Plane Entrypoints
 
-| Entrypoint           | Package Export     | Contents                                                                  |
-| -------------------- | ------------------ | ------------------------------------------------------------------------- |
-| `control.ts`         | `/control`         | Control descriptor: contract space wiring, migration package, codec hooks |
-| `runtime.ts`         | `/runtime`         | Runtime descriptor: codec registry, query operations                      |
-| `codec-types.ts`     | `/codec-types`     | Type exports for `contract.d.ts`                                          |
-| `operation-types.ts` | `/operation-types` | Operation type signatures                                                 |
-| `column-types.ts`    | `/column-types`    | Column type descriptor factory (e.g., `ltree()`)                          |
-| `pack.ts`            | `/pack`            | Pure metadata export for TS contract authoring                            |
+| Entrypoint           | Package Export     | Purpose                                                                                         |
+| -------------------- | ------------------ | ----------------------------------------------------------------------------------------------- |
+| `control.ts`         | `/control`         | Migration plane: `SqlControlExtensionDescriptor` wiring contract space, migrations, codec hooks |
+| `runtime.ts`         | `/runtime`         | Runtime plane: `SqlRuntimeExtensionDescriptor` with codec registry and query operations         |
+| `codec-types.ts`     | `/codec-types`     | Shared plane: Type exports (`CodecTypes`, branded types) for emitted `contract.d.ts`            |
+| `operation-types.ts` | `/operation-types` | Shared plane: Type signatures (`QueryOperationTypes`) for query builder inference               |
+| `column-types.ts`    | `/column-types`    | Shared plane: Column type descriptor factories (`ltree()`, `ltreeArray()`)                      |
+| `pack.ts`            | `/pack`            | Shared plane: Pack metadata (`ltreePackMeta`) for TS contract authoring                         |
 
-## MVP Scope for ltree
+## Implementation Status
+
+### Tier 1 (Foundation + Core Operators) — ✅ Complete
 
 - **Contract space**: `CREATE EXTENSION IF NOT EXISTS ltree`
-- **Codec**: `pg/ltree@1` (string ↔ string, label validation)
-- **Column helper**: `ltree()` / `ltree.Ltree`
-- **Core ops**:
-  - `isAncestorOf` → `{{self}} @> {{arg0}}`
-  - `isDescendantOf` → `{{self}} <@ {{arg0}}`
-  - `matchesLquery` → `{{self}} ~ ({{arg0}})::lquery`
-  - `matchesLqueryArray` → `{{self}} ? ({{arg0}})::lquery[]`
-  - `matchesLtxtquery` → `{{self}} @ ({{arg0}})::ltxtquery`
-- **Scalar fns** (phase 2): `nlevel()`, `subpath()`, `lca()`, `indexOf()`
+- **Codecs**: `pg/ltree@1` (string ↔ string, label validation) + `pg/ltree-array@1` (for Tier 3)
+- **Column helpers**: `ltree()` (for `ltree` columns), `ltreeArray()` (for `ltree[]` columns)
+- **Hierarchy operators**: `isAncestorOf` (`@>`), `isDescendantOf` (`<@`)
+- **Pattern-match operators**: `matchesLquery` (`~`), `matchesLqueryArray` (`?`), `matchesLtxtquery` (`@`)
+- **Scalar functions**: `nlevel()`, `subltree()`, `subpath()` (2 overloads), `indexOf()` (2 overloads), `lca()` (variadic, ≥2 paths)
+  - _Note:_ `lca()` has no single-arg form per PostgreSQL (see [ADR-001](docs/decisions/ADR-001-lca-api-shape.md))
+
+### Tier 2 (Concatenation + Conversion) — ✅ Complete
+
+- **Concatenation** (→ ltree): `concat` (`||`), `concatText` (`|| text`), `prependText` (`text ||`)
+- **Conversion**: `toText` (`ltree2text` → text), `toLtree` (`text2ltree` → ltree, rooted on text receiver per [ADR-002](docs/decisions/ADR-002-free-function-lowering.md))
+
+### Tier 3 (Array First-Match Operators) — ✅ Complete
+
+- **Array receiver**: dedicated `pg/ltree-array@1` codec (mirrors core `pg/text-array@1` pattern, per [ADR-003](docs/decisions/ADR-003-array-receiver.md))
+- **First-match operators** (→ ltree): `firstAncestorOf` (`?@>`), `firstDescendantOf` (`?<@`), `firstMatchLquery` (`?~`), `firstMatchLtxtquery` (`?@`)
 
 ## Reference Implementations
 
