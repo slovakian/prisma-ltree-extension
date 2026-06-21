@@ -33,4 +33,5 @@ jobs:
           vp run build
 
       - name: Publish preview package
+        if: ${{ github.event_name == 'pull_request' }}
         run: vp exec pkg-pr-new publish './packages/extension-ltree' --commentWithSha --packageManager=pnpm
