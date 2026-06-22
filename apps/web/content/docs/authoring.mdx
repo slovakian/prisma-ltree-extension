@@ -1,0 +1,133 @@
+---
+title: Authoring Contracts
+description: Declare ltree columns in the PSL lane or the TypeScript lane — both produce the same contract
+---
+
+Prisma Next has two consumer-facing surfaces for authoring your data contract, and
+`prisma-ltree` supports both:
+
+- the **PSL lane** — `contract.prisma`, the canonical surface the official extensions
+  document, and
+- the **TypeScript lane** — `contract.ts` via `defineContract`.
+
+Both lower to the same compiled contract. The PSL-emitted and TS-emitted `contract.json`
+are **byte-identical** (including `profileHash`/`storageHash`), so you can pick whichever
+surface fits your project and get exactly the same result. This parity is guarded by an
+automated test in the extension package.
+
+## Composing the extension
+
+Whichever lane you author in, add `ltree` to `extensions` in `prisma-next.config.ts` so
+the `ltree` namespace resolves during emit:
+
+```typescript title="prisma-next.config.ts"
+import { defineConfig } from "@prisma-next/postgres/config";
+import ltree from "prisma-ltree/control";
+
+export default defineConfig({
+  contract: "./contract.prisma", // or "./contract.ts"
+  extensions: [ltree],
+});
+```
+
+Omitting `ltree` from `extensions` while a `contract.prisma` references `ltree.Ltree()`
+fails emit with `PSL_EXTENSION_NAMESPACE_NOT_COMPOSED`.
+
+## Declaring ltree columns
+
+The extension exposes two named-type constructors — `ltree.Ltree()` for a single `ltree`
+path (codec `pg/ltree@1`) and `ltree.LtreeArray()` for an `ltree[]` array (codec
+`pg/ltree-array@1`). Author them in either lane:
+
+<Tabs items={["PSL", "TypeScript"]}>
+
+<Tab value="PSL">
+
+```prisma title="contract.prisma"
+// use prisma-next
+
+types {
+  // Single ltree path → codec `pg/ltree@1`, native type `ltree`.
+  Path = ltree.Ltree()
+  // ltree[] array → codec `pg/ltree-array@1`, native type `ltree[]`.
+  Paths = ltree.LtreeArray()
+}
+
+/// A page in a hierarchy. `path` is its position in the tree;
+/// `breadcrumbs` is the array of ancestor paths.
+model Page {
+  id          String @id @default(uuid())
+  path        Path
+  breadcrumbs Paths
+
+  @@map("page")
+}
+```
+
+The parentheses are **required**, even though these constructors take no arguments.
+`Path = ltree.Ltree` (no parens) fails with `PSL_INVALID_TYPES_MEMBER`.
+
+</Tab>
+
+<Tab value="TypeScript">
+
+```typescript title="contract.ts"
+import { defineContract } from "@prisma-next/postgres/contract-builder";
+import ltree from "prisma-ltree/pack";
+
+export const contract = defineContract(
+  {
+    extensionPacks: { ltree },
+  },
+  ({ field, model, type }) => {
+    const types = {
+      // Single ltree path → codec `pg/ltree@1`, native type `ltree`.
+      Path: type.ltree.Ltree(),
+      // ltree[] array → codec `pg/ltree-array@1`, native type `ltree[]`.
+      Paths: type.ltree.LtreeArray(),
+    } as const;
+
+    const Page = model("Page", {
+      fields: {
+        id: field.id.uuidv4String(),
+        path: field.namedType(types.Path),
+        breadcrumbs: field.namedType(types.Paths),
+      },
+    });
+
+    return {
+      types,
+      models: { Page: Page.sql({ table: "page" }) },
+    };
+  },
+);
+
+export default contract;
+```
+
+The `ltree` namespace on `type` is the same authoring surface the PSL lane exposes as
+`ltree.Ltree()` / `ltree.LtreeArray()`.
+
+</Tab>
+
+</Tabs>
+
+After editing either contract, re-emit:
+
+```bash
+pnpm prisma-next contract emit
+```
+
+## What about `@db.Ltree`?
+
+There is no `@db.Ltree` native-type attribute. `@db.*` attributes are backed by a static
+table hardcoded in Prisma Next's core (`db.Uuid`, `db.Timestamptz`, …) with no extension
+hook, so a third-party extension cannot register one. The `ltree` namespace constructor is
+the sanctioned surface and is exactly what the official extensions (pgvector, postgis) use.
+See [ADR-004](https://github.com/slovakian/prisma-ltree/blob/main/docs/decisions/ADR-004-psl-lane-support.md)
+for the full rationale.
+
+## Next steps
+
+Once your columns are declared, see [Getting Started](/docs/getting-started) for runtime
+wiring, the baseline migration, and your first queries.

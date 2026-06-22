@@ -1,3 +1,4 @@
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import { CodeBlock } from "./code-block";
@@ -8,6 +9,8 @@ export function getMDXComponents(components?: MDXComponents) {
     ...defaultMdxComponents,
     CodeBlock,
     InstallCommand,
+    Tab,
+    Tabs,
     ...components,
   } satisfies MDXComponents;
 }

@@ -9,7 +9,8 @@ import { demoCodeBlocks } from "@/lib/ltree-demo-data";
 
 const getHomeHighlights = createServerFn({ method: "GET" }).handler(async () => {
   const { highlightCodeBlocks } = await import("@/lib/shiki.server");
-  return { highlights: await highlightCodeBlocks([...homeCodeBlocks, ...demoCodeBlocks]) };
+  const setupBlocks = homeCodeBlocks.filter((block) => !block.id.startsWith("feature."));
+  return { highlights: await highlightCodeBlocks([...setupBlocks, ...demoCodeBlocks]) };
 });
 
 export const Route = createFileRoute("/")({
@@ -172,7 +173,8 @@ function Home() {
         <SectionLabel>Setup</SectionLabel>
         <h2 className="text-2xl font-medium">Get started in two steps</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Install the pack, add <code>ltree</code> columns to your schema, and run{" "}
+          Install the pack, declare ltree columns in <code>contract.prisma</code> (PSL) or{" "}
+          <code>contract.ts</code> (TypeScript) — both lanes emit the same contract — then run{" "}
           <code>prisma-next db init</code> or <code>db update</code> to enable the PostgreSQL{" "}
           <code>ltree</code> extension. Requires Node <code>&gt;=24</code> and{" "}
           <code>@prisma-next/*@0.14.0</code>.
@@ -187,55 +189,56 @@ function Home() {
             <CodeBlock html={highlights.config.html} />
           </div>
           <div>
-            <h3 className="mb-2 text-sm font-medium">2. Declare an ltree column</h3>
+            <h3 className="mb-2 text-sm font-medium">2. Declare ltree columns</h3>
             <p className="mb-3 text-sm text-muted-foreground">
-              Use the <code>ltree()</code> helper (or <code>ltreeArray()</code>) in your contract.
+              Use <code>ltree.Ltree()</code> in PSL or <code>ltree()</code> in TypeScript.{" "}
+              <a href="/docs/authoring" className="underline underline-offset-4">
+                See both lanes
+              </a>
+              .
             </p>
             <CodeBlock html={highlights.contract.html} />
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* Operations */}
       <section className="py-12">
         <SectionLabel>Operations</SectionLabel>
         <h2 className="text-2xl font-medium">Everything ltree, type-safe</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Each method maps to the native PostgreSQL operator or function shown below. Use them in{" "}
+          Each method maps to a native PostgreSQL operator or function. Use them in{" "}
           <code>where</code> filters and <code>select</code> projections like any other typed
-          column.
+          column. Full reference in the{" "}
+          <a href="/docs" className="underline underline-offset-4">
+            docs
+          </a>
+          .
         </p>
 
-        <div className="mt-10 flex flex-col gap-12">
+        <div className="mt-8 flex flex-col gap-8">
           {features.map((feature) => (
-            <article
-              key={feature.id}
-              id={feature.id}
-              className="grid scroll-mt-8 gap-6 md:grid-cols-2"
-            >
-              <div>
-                <h3 className="text-lg font-medium">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {feature.blurb}
-                </p>
-                <div className="mt-4 overflow-hidden border border-border">
-                  <table className="w-full text-xs">
-                    <tbody>
-                      {feature.ops.map((op) => (
-                        <tr key={op.method} className="border-b border-border last:border-0">
-                          <td className="px-3 py-2 align-top font-mono whitespace-nowrap">
-                            {op.method}
-                          </td>
-                          <td className="px-3 py-2 align-top font-mono text-muted-foreground">
-                            {op.sql}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            <article key={feature.id} id={feature.id} className="scroll-mt-8">
+              <h3 className="text-lg font-medium">{feature.title}</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {feature.blurb}
+              </p>
+              <div className="mt-4 overflow-hidden border border-border">
+                <table className="w-full text-xs">
+                  <tbody>
+                    {feature.ops.map((op) => (
+                      <tr key={op.method} className="border-b border-border last:border-0">
+                        <td className="px-3 py-2 align-top font-mono whitespace-nowrap">
+                          {op.method}
+                        </td>
+                        <td className="px-3 py-2 align-top font-mono text-muted-foreground">
+                          {op.sql}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <CodeBlock html={highlights[`feature.${feature.id}`].html} className="self-start" />
             </article>
           ))}
         </div>

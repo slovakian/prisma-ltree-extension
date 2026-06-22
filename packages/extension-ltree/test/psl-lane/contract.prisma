@@ -1,0 +1,18 @@
+// use prisma-next
+
+types {
+  // Single ltree path. Resolves to codec `pg/ltree@1`, native type `ltree`.
+  Path = ltree.Ltree()
+  // ltree[] array. Resolves to codec `pg/ltree-array@1`, native type `ltree[]`.
+  Paths = ltree.LtreeArray()
+}
+
+/// A page in a hierarchy. `path` is its position in the tree; `breadcrumbs`
+/// is the array of ancestor paths.
+model Page {
+  id          String @id @default(uuid())
+  path        Path
+  breadcrumbs Paths
+
+  @@map("page")
+}
