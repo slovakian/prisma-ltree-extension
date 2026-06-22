@@ -18,7 +18,7 @@ export default defineConfig({
   },
   {
     id: "contract",
-    code: `// Add an ltree column to a model
+    code: `// TypeScript lane — PSL uses ltree.Ltree() in contract.prisma
 import { int4Column, textColumn } from "@prisma-next/adapter-postgres/column-types";
 import { defineContract, field, model } from "@prisma-next/sql-contract-ts/contract-builder";
 import { ltree } from "prisma-ltree/column-types";
@@ -38,69 +38,6 @@ export const contract = defineContract({
     }).sql({ table: "category" }),
   },
 });`,
-    lang: "typescript",
-  },
-  {
-    id: "feature.hierarchy",
-    code: `// Every category under "Top.Science"
-const plan = sql
-  .from(tables.category)
-  .select({ id: tables.category.columns.id })
-  .where(
-    tables.category.columns.path.isDescendantOf(param("prefix")),
-  )
-  .build({ params: { prefix: "Top.Science" } });`,
-    lang: "typescript",
-  },
-  {
-    id: "feature.pattern-matching",
-    code: `// Paths like "Top.*.Astronomy" at any depth
-sql
-  .from(tables.category)
-  .where(
-    tables.category.columns.path.matchesLquery(
-      param("pattern"),
-    ),
-  )
-  .build({ params: { pattern: "Top.*.Astronomy" } });`,
-    lang: "typescript",
-  },
-  {
-    id: "feature.scalar-functions",
-    code: `// Project the depth of each path
-sql
-  .from(tables.category)
-  .select({
-    id: tables.category.columns.id,
-    depth: tables.category.columns.path.nlevel(),
-  })
-  .build({ params: {} });`,
-    lang: "typescript",
-  },
-  {
-    id: "feature.concat-convert",
-    code: `// Append a child label to an existing path
-sql
-  .from(tables.category)
-  .select({
-    child: tables.category.columns.path.concatText(
-      param("label"),
-    ),
-  })
-  .build({ params: { label: "Astronomy" } });`,
-    lang: "typescript",
-  },
-  {
-    id: "feature.array-first-match",
-    code: `// First stored path that is a descendant of the arg
-sql
-  .from(tables.category)
-  .select({
-    match: tables.node.columns.paths.firstDescendantOf(
-      param("prefix"),
-    ),
-  })
-  .build({ params: { prefix: "Top.Science" } });`,
     lang: "typescript",
   },
 ] as const;

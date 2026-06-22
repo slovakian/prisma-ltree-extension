@@ -73,6 +73,34 @@ export default defineConfig({
 
 ### Contract definition
 
+Author ltree columns in either lane — `contract.prisma` (PSL) or `contract.ts`
+(TypeScript). Both emit a byte-identical compiled contract.
+
+**PSL lane** — reference the `ltree` namespace constructors (parens required) and compose
+`ltree` into `extensions` in `prisma-next.config.ts`:
+
+```prisma
+// contract.prisma — use prisma-next
+
+types {
+  Path  = ltree.Ltree()      // → pg/ltree@1 / ltree
+  Paths = ltree.LtreeArray() // → pg/ltree-array@1 / ltree[]
+}
+
+model Page {
+  id          String @id @default(uuid())
+  path        Path
+  breadcrumbs Paths
+
+  @@map("page")
+}
+```
+
+`@db.Ltree` is not available — `@db.*` is a closed core table with no extension hook; the
+namespace constructor is the sanctioned surface (the same one pgvector and postgis use).
+
+**TypeScript lane**:
+
 ```typescript
 import { int4Column, textColumn } from "@prisma-next/adapter-postgres/column-types";
 import sqlFamily from "@prisma-next/family-sql/pack";

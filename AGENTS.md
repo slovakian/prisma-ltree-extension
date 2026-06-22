@@ -127,6 +127,15 @@ Per [ADR 212](https://github.com/prisma/prisma-next/blob/main/docs/architecture%
 - **Array receiver**: dedicated `pg/ltree-array@1` codec (mirrors core `pg/text-array@1` pattern, per [ADR-003](docs/decisions/ADR-003-array-receiver.md))
 - **First-match operators** (→ ltree): `firstAncestorOf` (`?@>`), `firstDescendantOf` (`?<@`), `firstMatchLquery` (`?~`), `firstMatchLtxtquery` (`?@`)
 
+### PSL contract lane — ✅ Parity proven
+
+- Consumers can author ltree columns in `contract.prisma` via the `ltree` namespace
+  constructor: `ltree.Ltree()` (→ `pg/ltree@1` / `ltree`) and `ltree.LtreeArray()`
+  (→ `pg/ltree-array@1` / `ltree[]`), composed through `extensions: [ltree]`.
+- TS↔PSL parity is byte-identical (incl. hashes) and guarded by
+  `test/psl-lane/psl-parity.test.ts`. `@db.Ltree` is out of scope (no extension hook in
+  core), per [ADR-004](docs/decisions/ADR-004-psl-lane-support.md).
+
 ## Reference Implementations
 
 When building, mirror the structure of:
