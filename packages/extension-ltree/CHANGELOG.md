@@ -1,5 +1,11 @@
 # prisma-ltree
 
+## 0.2.1
+
+### Patch Changes
+
+- Remove consumer-facing @db.Ltree documentation and set npm homepage to prisma-ltree.procka.org.
+
 ## 0.2.0
 
 ### Minor Changes

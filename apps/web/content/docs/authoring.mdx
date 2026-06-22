@@ -118,15 +118,6 @@ After editing either contract, re-emit:
 pnpm prisma-next contract emit
 ```
 
-## What about `@db.Ltree`?
-
-There is no `@db.Ltree` native-type attribute. `@db.*` attributes are backed by a static
-table hardcoded in Prisma Next's core (`db.Uuid`, `db.Timestamptz`, …) with no extension
-hook, so a third-party extension cannot register one. The `ltree` namespace constructor is
-the sanctioned surface and is exactly what the official extensions (pgvector, postgis) use.
-See [ADR-004](https://github.com/slovakian/prisma-ltree/blob/main/docs/decisions/ADR-004-psl-lane-support.md)
-for the full rationale.
-
 ## Next steps
 
 Once your columns are declared, see [Getting Started](/docs/getting-started) for runtime

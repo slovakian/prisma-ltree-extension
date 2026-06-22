@@ -96,9 +96,6 @@ model Page {
 }
 ```
 
-`@db.Ltree` is not available — `@db.*` is a closed core table with no extension hook; the
-namespace constructor is the sanctioned surface (the same one pgvector and postgis use).
-
 **TypeScript lane**:
 
 ```typescript
