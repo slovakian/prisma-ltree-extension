@@ -1,0 +1,22 @@
+services:
+  postgres:
+    # Stock Postgres. The `ltree` contrib extension ships with this image —
+    # no special build needed (unlike PostGIS). prisma-ltree's baseline
+    # migration runs `CREATE EXTENSION IF NOT EXISTS ltree`.
+    image: postgres:17-alpine
+    ports:
+      # 5434 to avoid clashing with a local Postgres on 5432 or the
+      # prisma-next workspace DBs on 5433/5435.
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: family_tree
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d family_tree"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    # Disposable: data lives in memory, gone on `db:down`.
+    tmpfs:
+      - /var/lib/postgresql/data

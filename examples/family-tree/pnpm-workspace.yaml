@@ -1,0 +1,9 @@
+# Standalone project root. This file exists so pnpm treats examples/family-tree
+# as its own workspace instead of joining the prisma-ltree monorepo above it.
+# Everything installs from npm — the example is meant to be copied out and run on
+# its own.
+packages: []
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - prisma-ltree@0.2.1

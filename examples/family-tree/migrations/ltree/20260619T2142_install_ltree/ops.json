@@ -1,0 +1,40 @@
+[
+  {
+    "id": "ltree.install-ltree-extension",
+    "label": "Enable extension \"ltree\"",
+    "operationClass": "additive",
+    "invariantId": "ltree:install-ltree-v1",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "dependency",
+        "name": "ltree"
+      }
+    },
+    "precheck": [
+      {
+        "description": "verify extension \"ltree\" is not already enabled",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_extension\" WHERE \"extname\" = $1) AS \"result\"",
+        "params": [
+          "ltree"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create extension \"ltree\"",
+        "sql": "CREATE EXTENSION IF NOT EXISTS ltree"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "confirm extension \"ltree\" is enabled",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_extension\" WHERE \"extname\" = $1) AS \"result\"",
+        "params": [
+          "ltree"
+        ]
+      }
+    ]
+  }
+]

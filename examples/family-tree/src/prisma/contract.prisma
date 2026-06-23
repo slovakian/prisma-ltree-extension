@@ -1,0 +1,40 @@
+// use prisma-next
+
+types {
+  // A single ltree path. Resolves to codec `pg/ltree@1`, native type `ltree`.
+  // Each `Taxon` row's `path` is its position in the Catarrhini-rooted
+  // phylogenetic tree (e.g. `Catarrhini.Hominoidea.Hominidae.Homininae.Hominini.Homo.Homo_sapiens`).
+  Path = ltree.Ltree()
+}
+
+/// One node in a Catarrhini-rooted phylogenetic tree (Old World monkeys + apes
+/// down to living and key extinct *Homo* species).
+///
+/// This model is the data layer of the Tree-of-Life showcase viewer. `path`
+/// is the materialized ltree path from the root `Catarrhini` down to this
+/// taxon — every query the showcase surfaces (`isAncestorOf`, `lca()`,
+/// `matchesLquery`, ...) is dispatched to Postgres via prisma-next and the
+/// `prisma-ltree` extension; no lineage, MRCA, or subtree math is done in the
+/// client.
+///
+/// Clade nodes (parvorder / superfamily / family / subfamily / tribe / genus)
+/// and species nodes share one table; `rank` describes which. The ORM API
+/// uses camelCase field names while the on-disk columns are snake_case —
+/// `@map` carries one to the other. `wiki_url` is the canonical English
+/// Wikipedia article URL, and `thumbnail_url` is resolved at seed time via
+/// the Wikipedia `pageimages` REST API (nullable when Wikipedia has no page
+/// image for the article).
+model Taxon {
+  id             String   @id @default(uuid())
+  path           Path     @unique
+  scientificName String   @map("scientific_name")
+  commonName     String?  @map("common_name")
+  rank           String
+  extinct        Boolean
+  maOrigin       Float?   @map("ma_origin")
+  maExtinct      Float?   @map("ma_extinct")
+  wikiUrl        String   @map("wiki_url")
+  thumbnailUrl   String?  @map("thumbnail_url")
+
+  @@map("taxon")
+}

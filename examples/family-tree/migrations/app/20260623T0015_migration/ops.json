@@ -1,0 +1,83 @@
+[
+  {
+    "id": "table.taxon",
+    "label": "Create table \"taxon\"",
+    "summary": "Creates table \"taxon\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "taxon"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"taxon\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"taxon\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"taxon\"",
+        "sql": "CREATE TABLE \"public\".\"taxon\" (\n  \"common_name\" text,\n  \"extinct\" bool NOT NULL,\n  \"id\" character(36) NOT NULL,\n  \"ma_extinct\" float8,\n  \"ma_origin\" float8,\n  \"path\" \"ltree\" NOT NULL,\n  \"rank\" text NOT NULL,\n  \"scientific_name\" text NOT NULL,\n  \"thumbnail_url\" text,\n  \"wiki_url\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"taxon\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"taxon\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.taxon.taxon_path_key",
+    "label": "Add unique constraint on \"taxon\" (path)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "taxon_path_key",
+        "table": "taxon"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"taxon_path_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "taxon_path_key",
+          "public",
+          "\"public\".\"taxon\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"taxon_path_key\"",
+        "sql": "ALTER TABLE \"public\".\"taxon\" ADD CONSTRAINT \"taxon_path_key\" UNIQUE (\"path\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"taxon_path_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "taxon_path_key",
+          "public",
+          "\"public\".\"taxon\""
+        ]
+      }
+    ]
+  }
+]
