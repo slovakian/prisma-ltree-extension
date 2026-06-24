@@ -105,6 +105,10 @@ Per [ADR 212](https://github.com/prisma/prisma-next/blob/main/docs/architecture%
 | `column-types.ts`    | `/column-types`    | Shared plane: Column type descriptor factories (`ltree()`, `ltreeArray()`)                      |
 | `pack.ts`            | `/pack`            | Shared plane: Pack metadata (`ltreePackMeta`) for TS contract authoring                         |
 
+> **Full export map (maintainer reference):** [`docs/reference/export-map.md`](docs/reference/export-map.md)
+> — authoritative record of every subpath export, its import idiom, and where consumers
+> wire it. Keep it in sync when changing `src/exports/*` or `package.json#exports`.
+
 ## Implementation Status
 
 ### Tier 1 (Foundation + Core Operators) — ✅ Complete
