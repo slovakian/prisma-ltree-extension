@@ -2,6 +2,7 @@
   "name": "prisma-ltree-extension",
   "version": "0.0.0",
   "private": true,
+  "description": "Monorepo for prisma-ltree — a Prisma Next extension pack for PostgreSQL's ltree hierarchical-tree data type.",
   "type": "module",
   "scripts": {
     "ready": "vp run --filter ./packages/extension-ltree check-pins && vp run --filter ./packages/extension-ltree build && vp check packages/extension-ltree && vp run --filter ./packages/extension-ltree test",
@@ -23,7 +24,7 @@
     "vite-plus": "catalog:"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=24"
   },
   "packageManager": "pnpm@11.7.0"
 }

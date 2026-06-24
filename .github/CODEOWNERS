@@ -1,0 +1,6 @@
+# Code owners for prisma-ltree.
+#
+# This file routes review requests automatically. It does NOT change who can merge —
+# the maintainer approves every PR. See CONTRIBUTING.md.
+
+* @slovakian

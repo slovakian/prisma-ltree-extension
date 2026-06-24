@@ -26,6 +26,11 @@ coverage
 *.sln
 *.sw?
 
+# Environment files (never commit secrets; keep example templates)
+.env
+.env.*
+!.env.example
+
 # Synced external references (not committed)
 .sync/
 
