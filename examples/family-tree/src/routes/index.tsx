@@ -115,16 +115,6 @@ function Home() {
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      <header className="shrink-0 border-b px-6 py-3">
-        <h1 className="text-lg font-bold tracking-tight">
-          prisma-ltree · <span className="text-primary">Tree of Life</span>
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          A pannable phylogeny rooted at <em>Catarrhini</em> — every control maps to a real{" "}
-          <code>ltree</code> query. {taxa.length} taxa.
-        </p>
-      </header>
-
       <div className="flex min-h-0 flex-1">
         <section className="relative min-w-0 flex-1">
           <TreeCanvas
@@ -133,6 +123,35 @@ function Home() {
             onSelectTaxon={selectTaxon}
             onReady={onReady}
           />
+
+          {/* Floating title + hint chrome. The wrapper never traps pointer
+              events so the canvas pans/zooms beneath it; re-enable per-element
+              only where something is interactive. */}
+          <div className="pointer-events-none absolute inset-0 z-10">
+            <div className="absolute left-5 top-5 max-w-[26rem] sm:left-9 sm:top-7">
+              <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-primary">
+                prisma-ltree
+              </p>
+              <h1 className="mt-2 font-heading text-4xl font-medium leading-none tracking-[0.01em] text-foreground sm:text-5xl">
+                Tree of Life
+              </h1>
+              <div className="my-3.5 h-px w-14 bg-border" />
+              <p className="max-w-sm font-heading text-[15px] italic leading-relaxed text-muted-foreground">
+                A pannable phylogeny rooted at Catarrhini — every control maps to a real{" "}
+                <code className="font-mono text-[13px] not-italic">ltree</code> query. {taxa.length}{" "}
+                taxa.
+              </p>
+            </div>
+
+            <div className="absolute right-5 top-6 hidden text-right font-mono text-[10.5px] uppercase leading-[1.9] tracking-[0.14em] text-muted-foreground sm:block">
+              Drag to pan
+              <br />
+              Scroll to zoom
+              <br />
+              Click a node
+            </div>
+          </div>
+
           {selection ? (
             <SidePanel
               taxon={selection.taxon}
