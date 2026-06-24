@@ -14,10 +14,11 @@ import {
   indexOfBranchQuery,
   lineageSliceQuery,
   lineageSubtreeQuery,
+  pruneUserTaxaQuery,
   searchLqueryArrayQuery,
   searchLqueryQuery,
   searchLtxtqueryQuery,
-} from "../../src/server/taxonomy";
+} from "../../src/server/taxonomy.server";
 
 // H. sapiens and H. neanderthalensis nest under H. heidelbergensis, modeled as
 // their last common ancestor (mainstream paleoanthropology). So both sit at
@@ -296,5 +297,44 @@ describe("graftTaxon — concatText (||) insert", () => {
 
     const verify = await getLineageQuery(`${HOMO}.Homo_long_lived`);
     expect(verify.some((t) => t.path === `${HOMO}.Homo_long_lived`)).toBe(true);
+  });
+
+  it("carries the optional common name, rank, and extinct flag", async () => {
+    const inserted = await graftTaxonQuery(HOMO, "Homo_mythicus", {
+      commonName: "Mythical human",
+      rank: "subspecies",
+      extinct: true,
+    });
+    graftedIds.push(inserted.id);
+    expect(inserted.commonName).toBe("Mythical human");
+    expect(inserted.rank).toBe("subspecies");
+    expect(inserted.extinct).toBe(true);
+    // Grafted rows carry an empty wiki_url — the prune sentinel.
+    expect(inserted.wikiUrl).toBe("");
+  });
+
+  it("rejects an invalid ltree label before inserting", async () => {
+    await expect(graftTaxonQuery(HOMO, "1nvalid label")).rejects.toThrow();
+    const verify = await getSubtreeQuery(HOMO);
+    expect(verify.some((t) => t.scientificName === "1nvalid label")).toBe(false);
+  });
+});
+
+describe("pruneUserTaxa — restore seeded state", () => {
+  it("removes only grafted rows and leaves the 46 seeded taxa intact", async () => {
+    const grafted = await graftTaxonQuery(HOMO, "Homo_ephemerus");
+    // Pruned below, so it never needs the afterAll id-cleanup.
+    const before = await getTaxaQuery();
+    expect(before.some((t) => t.path === grafted.path)).toBe(true);
+
+    const removed = await pruneUserTaxaQuery();
+    expect(removed).toBeGreaterThanOrEqual(1);
+
+    const after = await getTaxaQuery();
+    expect(after).toHaveLength(46);
+    expect(after.every((t) => t.wikiUrl !== "")).toBe(true);
+    // The id-tracked grafts from earlier tests are gone too; clear the list so
+    // afterAll does not try to re-delete them.
+    graftedIds.length = 0;
   });
 });

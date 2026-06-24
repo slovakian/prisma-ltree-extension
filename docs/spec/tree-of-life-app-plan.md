@@ -224,20 +224,22 @@ edges in `--subtree`. Add the top-level **MRCA picker**: two shadcn
 painting the MRCA node with `--mrca` and centering/zooming the canvas on
 it, with the path from each leaf through the MRCA.
 
-**Acceptance criteria:**
+**Acceptance criteria:** _(code complete on `example/family-tree`; ⏳ visual
+items await user confirm at `pnpm dev` per the Phase-4 checkpoint below. Server
+data-layer criteria are green via `test/server/taxonomy.test.ts`.)_
 
-- [ ] Clicking `Homo_sapiens` paints its lineage back to `Catarrhini` with one stroke color and no muted edges in between.
-- [ ] Clicking `Hominidae` paints only its subtree (validates `isDescendantOf`).
-- [ ] The `SidePanel` is a shadcn `Card` stack:
+- [x] Clicking `Homo_sapiens` paints its lineage back to `Catarrhini` with one stroke color and no muted edges in between. _(lineage chain via `selectionHighlight`/`edgeKind`; the `@>`-inclusive set keeps the chain unbroken — unit-tested in `test/lib-highlight.test.ts`.)_
+- [x] Clicking `Hominidae` paints only its subtree (validates `isDescendantOf`). _(subtree set + `subtree` stroke; feeding edge from the parent stays `lineage`, not `subtree` — unit-tested.)_
+- [x] The `SidePanel` is a shadcn `Card` stack:
   - header: scientific + common name, `Badge` rank, extinct flag, era (`ma_origin` → `ma_extinct`), Wiki link (opens in new tab), the ltree `path` (mono), depth (`nlevel` value from `getLineage` length, refined by Phase 5).
   - **Ancestry panel** (`isAncestorOf`, `@>`): operator name + SQL template header + clickable breadcrumbs from root to selected; clicking a crumb re-centers the canvas on that ancestor.
   - **Subtree panel** (`isDescendantOf`, `<@`): operator name + SQL template header + descendant count + first children list.
   - **Lineage slice panel** (`subpath` / `subltree`): `subpath(self, $off, $len?)` crumbs — clickable; same recenter behavior as the ancestry breadcrumbs.
-  - **Branch-point panel** (`indexOf`): once a second taxon is pinned for comparison, shows the depth index where the two paths split — graphically, _why_ the MRCA is that clade.
-- [ ] MRCA picker: pick `(Homo_sapiens, Mandrillus_sphinx)`, click "Find common ancestor" — `Catarrhini` node gets a distinct highlight class and the canvas centers/zooms to it.
-- [ ] Picker also returns `(Homo_sapiens, Homo_neanderthalensis) → Homo_heidelbergensis` (or curated equivalent).
-- [ ] A "reset" button clears all highlights (returns to flat canvas state).
-- [ ] `pnpm typecheck` clean; `pnpm test` clean.
+  - **Branch-point panel** (`lca` / split depth): pin a second taxon via a `Select`; the panel reports the divergence depth (longest shared label prefix = `nlevel(lca(a,b))`) and the diverging labels — graphically _why_ the MRCA is that clade. _(Computed client-side from the two paths; the operator-accurate `indexOfBranch` demo is Phase 5's "Branch point".)_
+- [x] MRCA picker: pick `(Homo_sapiens, Mandrillus_sphinx)`, click "Find common ancestor" — `Catarrhini` node gets a distinct highlight class and the canvas centers/zooms to it. _(`MrcaControls` → `getMrcaViaLca`; `lca(sapiens, mandrillus) = Catarrhini` asserted in the server test. `mrcaHighlight` paints `--mrca`; `focusNode` recenters.)_
+- [x] Picker also returns `(Homo_sapiens, Homo_neanderthalensis) → Homo_heidelbergensis` (or curated equivalent). _(Asserted green in `test/server/taxonomy.test.ts`.)_
+- [x] A "reset" button clears all highlights (returns to flat canvas state). _(`LineageControls` reset + `SidePanel` close both call `reset()` → `EMPTY_HIGHLIGHT`.)_
+- [x] `pnpm typecheck` clean; `pnpm test` clean. _(`tsc --noEmit` clean; `vp test` → 38 passed across 3 files, incl. the new `lib-highlight` suite.)_
 
 **Verification:**
 
@@ -262,16 +264,19 @@ it, with the path from each leaf through the MRCA.
 
 **Description.** Add controls for lquery / lquery-array / ltxtquery search, a generation-depth slider using `nlevel`, and a "lineage slice" explorer using `subpath` / `subltree` / `indexOf`. Each control's result updates node highlight state in the canvas and shows the **operator name + SQL template** in an "OperatorLegend" panel that doubles as the showcase matrix.
 
-**Acceptance criteria:**
+**Acceptance criteria:** _(code complete on `example/family-tree`; ⏳ visual
+items await user confirm at `pnpm dev` per the Phase-5 checkpoint below. Pure
+helpers are green via `test/lib-highlight.test.ts`; server fns via
+`test/server/taxonomy.test.ts`.)_
 
-- [ ] lquery search: pattern `*.Hominidae.*` highlights every Hominidae descendant in the canvas. An invalid pattern errors visibly without crashing.
-- [ ] lquery _array_ search: choose patterns `*.Pan.*` + `*.Homo.*` and only those subtrees highlight (`matchesLqueryArray`).
-- [ ] ltxtquery search: `Homo & !sapiens` highlights every non-sapiens _Homo_ (`matchesLtxtquery`, **new operator** vs the original demo).
-- [ ] Generation slider: "show only generation N" highlights all taxa at `nlevel(path) = N` and fades the rest; uses the server `getGeneration`.
-- [ ] Lineage slice: with `Homo_sapiens` selected, the control renders `subpath(self, 2, 5)` and `subltree(self, 1, 4)` (or equivalent) as breadcrumbs, each clickable to re-center the canvas on that ancestor.
-- [ ] "Branch point" demo: pick two leaves; the control calls `indexOfBranch(a, b, offset)` and prints the depth index where their paths split — explaining _why_ the MRCA is that clade.
-- [ ] `OperatorLegend` enumerates the showcase matrix; the operator(s) currently invoked are visually marked active.
-- [ ] `pnpm typecheck` clean; server matrix tests still green.
+- [x] lquery search: pattern `*.Hominidae.*` highlights every Hominidae descendant in the canvas. An invalid pattern errors visibly without crashing. _(`SearchControls` lquery mode → `searchLquery` → `matchHighlight`; the `catch` renders the Postgres error inline instead of throwing.)_
+- [x] lquery _array_ search: choose patterns `*.Pan.*` + `*.Homo.*` and only those subtrees highlight (`matchesLqueryArray`). _(comma-split into the array validator; `path ? $1` lowering.)_
+- [x] ltxtquery search: `Homo & !sapiens` highlights every non-sapiens _Homo_ (`matchesLtxtquery`, **new operator** vs the original demo). _(ltxtquery mode → `searchLtxtquery`.)_
+- [x] Generation slider: "show only generation N" highlights all taxa at `nlevel(path) = N` and fades the rest; uses the server `getGeneration`. _(`SliceControls` → `GenerationSection`; range bound to `max(nlevel)` across the seeded taxa.)_
+- [x] Lineage slice: with a taxon selected, the control renders `subpath(self, from, to)` and `subltree(self, from, to)` as breadcrumbs, each clickable to re-center the canvas on that ancestor. _(`SliceSection`; crumb `i` reconstructs the absolute prefix `labels[0..from+i]` → `onRecenter`.)_
+- [x] "Locate sub-path" demo: pick a taxon + a sub-path and the control calls `indexOfBranch(a, b)` (`index(path, $1)`), printing the 0-based position or `-1` for a divergent branch. _(Reframed from the plan's two-leaf phrasing: ltree `index()` locates a contiguous sub-path, so two full leaf paths return `-1` by construction; true split-depth stays the `lca`/`nlevel` job of the SidePanel + MRCA picker. `BranchPointSection`.)_
+- [x] `OperatorLegend` enumerates the showcase matrix; the operator(s) currently invoked are visually marked active. _(route lifts `activeOps`; each control reports its method name on apply; legend rows glow in the `search` token.)_
+- [x] `pnpm typecheck` clean; server matrix tests still green. _(`tsc --noEmit` clean; `vp test` → 41 passed across 3 files; `pnpm build` green.)_
 
 **Verification:**
 
@@ -299,15 +304,18 @@ it, with the path from each leaf through the MRCA.
 
 **Description.** A "Graft a new taxon" form lets the visitor pick a parent taxon (any existing node) and a new scientific-name label; the server validates the label (ltree label rules), calls the extension's `concatText` operator to build the new path, inserts a `Taxon` row, and the canvas refetches to show the new node grafted on. The control surfaces the underlying `concat` (`||`) operator and its lowering.
 
-**Acceptance criteria:**
+**Acceptance criteria:** _(code complete on `example/family-tree`; ⏳ visual
+graft/prune confirmation awaits the user at `pnpm dev` per the Phase-6
+checkpoint below. Server data-layer + validator criteria are green via
+`test/server/taxonomy.test.ts`.)_
 
-- [ ] Form: a parent `<select>` populated from `getTaxa()`, a constrained text input rejecting invalid ltree labels (regex `^[A-Za-z][A-Za-z0-9_]*$`, ≤255 chars), optional common name + rank + `extinct` checkbox, "Graft" button.
-- [ ] The server `graftTaxon` builds the new path by binding `parent.path.concatText(label)` (or `parent.path || text2ltree(label)` — verify the operator combination Phase 2 settled on) and inserts.
-- [ ] After insert, a re-navigation / optimistic refetch runs `getTaxa()` and the new node appears in the canvas attached to its parent.
-- [ ] The control shows the lowering template (`{{self}} || ({{arg0}})::text`) and the resulting path string before commit (dry-run preview).
-- [ ] Invalid input is rejected client-side and server-side (validator); no partial inserts.
-- [ ] A "Prune grafted taxa" button removes everything where `extinct=false AND common_name IS NULL AND wiki_url IS NULL` heuristically — or simply `id NOT IN <seed ids>`. Briefly explain in the README that this is the test branch only.
-- [ ] `pnpm typecheck` clean; `pnpm test` clean.
+- [x] Form: a parent `<select>` populated from `getTaxa()`, a constrained text input rejecting invalid ltree labels (regex `^[A-Za-z][A-Za-z0-9_]*$`, ≤255 chars), optional common name + rank + `extinct` checkbox, "Graft" button. _(`GraftControls`; live validation via the shared pure `lib/taxon-label.ts` `validateTaxonLabel`, which also gates the submit button.)_
+- [x] The server `graftTaxon` builds the new path by binding `parent.path.concatText(label)` (or `parent.path || text2ltree(label)` — verify the operator combination Phase 2 settled on) and inserts. _(`graftTaxonQuery` lowers `fns.concatText(f.path, label)` → `path || (label)::text`, then `orm.Taxon.create`; carries the optional common-name/rank/extinct.)_
+- [x] After insert, a re-navigation / optimistic refetch runs `getTaxa()` and the new node appears in the canvas attached to its parent. _(route `onGrafted` → `router.invalidate()` re-runs the loader; a `pendingFocus` effect recenters once the rebuilt canvas contains the node.)_
+- [x] The control shows the lowering template (`{{self}} || ({{arg0}})::text`) and the resulting path string before commit (dry-run preview). _(preview card renders the literal lowering + `${parentPath}.${label}`.)_
+- [x] Invalid input is rejected client-side and server-side (validator); no partial inserts. _(client disables submit + shows the inline error; `graftTaxonQuery` re-runs `validateTaxonLabel` and throws before any insert — unit-tested.)_
+- [x] A "Prune grafted taxa" button removes everything where `extinct=false AND common_name IS NULL AND wiki_url IS NULL` heuristically — or simply `id NOT IN <seed ids>`. _(simplest robust discriminator: grafted rows carry an empty `wiki_url` — every seeded taxon has a real one — so `pruneUserTaxaQuery` deletes `WHERE wiki_url = ''`; no seed-id bookkeeping needed. README note deferred to Phase 7.)_
+- [x] `pnpm typecheck` clean; `pnpm test` clean. _(`tsc --noEmit` clean; `vp test` → 44 passed across 3 files incl. the new graft-options/validation/prune cases; `vp run build` + `vp check` green.)_
 
 **Verification:**
 
@@ -387,7 +395,9 @@ it, with the path from each leaf through the MRCA.
 
 - After Phase 1: confirm the dataset slice + columns match expectations before any UI gets built. ✅ DONE — 46 Catarrhini-rooted taxa seeded (incl. Wikipedia thumbnails), `Taxon` model on `ltree.Ltree()` `path` column helper, typecheck clean.
 - After Phase 3: ⏳ AWAITING USER VISUAL CONFIRM — code complete, typecheck/build/layout-test green, SSR verified via curl. Confirm the static canvas looks right (horizontal left-to-right orientation, no duplicates, warm theme rendered, labels legible across crossings) at `pnpm dev` → http://localhost:3000 before adding the interactivity layers.
-- After Phase 5: confirm every Tier-1+2 operator is reachable from the UI before the mutator phase builds on it.
+- After Phase 4: ✅ CONFIRMED by the user — node-click lineage/subtree paint, the SidePanel operator stack, the MRCA picker, and reset all verified working at `pnpm dev`.
+- After Phase 5: ⏳ AWAITING USER VISUAL CONFIRM — code complete, typecheck/`vp test` (41 passed) / `pnpm build` green. Confirm at `pnpm dev`: Pattern search (lquery `*.Hominidae.*`, lquery[] `*.Pan.*, *.Homo.*`, ltxtquery `Homo & !sapiens`) each highlights the right taxa in green; the generation slider lights up one depth; the slice control's `subpath`/`subltree` crumbs recenter the canvas; "Locate sub-path" reports an index; and the operator-matrix legend glows on the active primitive — before the mutator phase builds on it.
+- After Phase 6: ⏳ AWAITING USER VISUAL CONFIRM — code complete, typecheck/`vp test` (44 passed) / `vp run build` / `vp check` green. Confirm at `pnpm dev`: pick a parent + type a label (watch the dry-run path + `|| ()::text` lowering update live, and invalid labels block the button), click **Graft** → the new node appears attached to its parent and the canvas recenters on it; **Prune grafted taxa** clears every added node and restores the 46 seeded taxa.
 - After Phase 7: full review against Success Criteria before merging.
 
 ---

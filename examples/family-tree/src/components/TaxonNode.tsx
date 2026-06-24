@@ -23,15 +23,25 @@ function cladeGlyph(scientificName: string): string {
   return cleaned.slice(0, 2).toUpperCase();
 }
 
+/** Per-highlight ring + surface tint applied to the node body. */
+const HIGHLIGHT_CLASS: Record<NonNullable<TaxonFlowNode["data"]["highlight"]>, string> = {
+  selected: "ring-2 ring-primary ring-offset-2 ring-offset-background",
+  lineage: "ring-2 ring-[var(--lineage-foreground)] bg-lineage text-lineage-foreground",
+  subtree: "ring-2 ring-[var(--subtree-foreground)] bg-subtree text-subtree-foreground",
+  mrca: "ring-2 ring-[var(--mrca)] bg-mrca text-mrca-foreground",
+  search: "ring-2 ring-[var(--search-foreground)] bg-search text-search-foreground",
+};
+
 export function TaxonNode({ data }: NodeProps<TaxonFlowNode>) {
-  const { taxon } = data;
+  const { taxon, highlight } = data;
   return (
     <div
       className={cn(
-        "group flex items-center gap-2.5 rounded-lg border bg-card px-2.5 py-1.5 text-card-foreground",
+        "group flex cursor-pointer items-center gap-2.5 rounded-lg border bg-card px-2.5 py-1.5 text-card-foreground",
         "shadow-[0_1px_3px_rgba(0,0,0,0.12),0_0_0_4px_var(--card)]",
         "transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.18),0_0_0_4px_var(--card)]",
         taxon.extinct && "border-dashed opacity-90",
+        highlight && HIGHLIGHT_CLASS[highlight],
       )}
       style={{ width: NODE_WIDTH, height: NODE_HEIGHT }}
     >

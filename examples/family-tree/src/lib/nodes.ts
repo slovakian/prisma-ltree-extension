@@ -1,4 +1,5 @@
 import type { Edge, Node, Position } from "@xyflow/react";
+import type { HighlightKind } from "./highlight";
 import type { TaxonRow } from "../server/taxonomy";
 
 /**
@@ -28,6 +29,8 @@ export const COL_GAP = NODE_WIDTH + 110;
 
 export type TaxonNodeData = {
   taxon: TaxonRow;
+  /** On-canvas highlight kind; `null` = neutral, `undefined` = no highlight active. */
+  highlight?: HighlightKind | null;
 };
 
 export type TaxonFlowNode = Node<TaxonNodeData, typeof TAXON_NODE_TYPE>;
