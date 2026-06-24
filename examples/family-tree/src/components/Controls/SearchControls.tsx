@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { searchLquery, searchLqueryArray, searchLtxtquery } from "../../server/taxonomy";
+import { searchLquery, searchLqueryArray, searchLtxtquery } from "../../server/taxonomy.functions";
 import { type HighlightState, matchHighlight } from "~/lib/highlight";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";

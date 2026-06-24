@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, X } from "lucide-react";
 import type { TaxonRow } from "../server/taxonomy";
-import { lineageSlice } from "../server/taxonomy";
+import { lineageSlice } from "../server/taxonomy.functions";
 import { parentPath } from "~/lib/layout";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";

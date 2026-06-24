@@ -16,7 +16,7 @@ import {
   searchLqueryHandler as searchLqueryQuery,
   searchLqueryArrayHandler as searchLqueryArrayQuery,
   searchLtxtqueryHandler as searchLtxtqueryQuery,
-} from "../../src/server/taxonomy";
+} from "../../src/server/taxonomy.server";
 
 // H. sapiens and H. neanderthalensis nest under H. heidelbergensis, modeled as
 // their last common ancestor (mainstream paleoanthropology). So both sit at

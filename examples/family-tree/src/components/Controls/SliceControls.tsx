@@ -1,7 +1,12 @@
 import { type ReactNode, useMemo, useState } from "react";
 import { GitFork, Layers, Scissors } from "lucide-react";
 import type { TaxonRow } from "../../server/taxonomy";
-import { getGeneration, indexOfBranch, lineageSlice, lineageSubtree } from "../../server/taxonomy";
+import {
+  getGeneration,
+  indexOfBranch,
+  lineageSlice,
+  lineageSubtree,
+} from "../../server/taxonomy.functions";
 import { type HighlightState, matchHighlight } from "~/lib/highlight";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";

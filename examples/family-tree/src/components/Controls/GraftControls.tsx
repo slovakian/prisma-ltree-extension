@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Eraser, Sprout } from "lucide-react";
 import type { TaxonRow } from "../../server/taxonomy";
-import { graftTaxon, pruneUserTaxa } from "../../server/taxonomy";
+import { graftTaxon, pruneUserTaxa } from "../../server/taxonomy.functions";
 import { validateTaxonLabel } from "~/lib/taxon-label";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";

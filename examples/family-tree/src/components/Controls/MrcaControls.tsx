@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ExternalLink, GitMerge } from "lucide-react";
 import type { TaxonRow } from "../../server/taxonomy";
-import { getLineage, getMrcaViaLca } from "../../server/taxonomy";
+import { getLineage, getMrcaViaLca } from "../../server/taxonomy.functions";
 import { type HighlightState, mrcaHighlight } from "~/lib/highlight";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";

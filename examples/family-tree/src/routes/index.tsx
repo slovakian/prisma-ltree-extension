@@ -15,7 +15,7 @@ import {
   matchHighlight,
   selectionHighlight,
 } from "~/lib/highlight";
-import { type TaxonRow, getLineage, getSubtree, getTaxa } from "~/server/taxonomy";
+import { type TaxonRow, getLineage, getSubtree, getTaxa } from "~/server/taxonomy.functions";
 
 /**
  * Root view: Tree-of-Life interactive viewer.
