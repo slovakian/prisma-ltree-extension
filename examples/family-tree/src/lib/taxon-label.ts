@@ -6,7 +6,7 @@
  * additionally caps a single label at 255 bytes. This viewer narrows that to a
  * scientific-name convention — every label must *start* with a letter (so the
  * label reads as a clade/`Genus_epithet` name, never a bare number) — matching
- * the regex documented in the Phase 6 plan: `^[A-Za-z][A-Za-z0-9_]*$`.
+ * the regex: `^[A-Za-z][A-Za-z0-9_]*$`.
  *
  * Kept free of the DB runtime so the form can validate keystroke-by-keystroke
  * in the browser and the server can re-check the same rule before inserting.

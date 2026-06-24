@@ -22,11 +22,10 @@ import { type TaxonRow, getLineage, getSubtree, getTaxa } from "~/server/taxonom
  *
  * The loader streams every taxon (path asc) from `getTaxa` — a real ltree query,
  * no client-side tree assembly. `<TreeCanvas>` lays the paths out as a
- * horizontal dendrogram with React Flow. Phase 4 wires interactivity: clicking a
- * node fetches its lineage (`@>`) and subtree (`<@`) in parallel, paints the
- * highlight, and opens the `SidePanel` operator stack; the aside hosts the
- * highlight legend/reset (`LineageControls`) and the `lca()` MRCA picker
- * (`MrcaControls`). Search/graft controls land in Phases 5–6.
+ * horizontal dendrogram with React Flow. Clicking a node fetches its lineage
+ * (`@>`) and subtree (`<@`) in parallel, paints the highlight, and opens the
+ * `SidePanel` operator stack; the aside hosts the highlight legend/reset
+ * (`LineageControls`) and the `lca()` MRCA picker (`MrcaControls`).
  */
 export const Route = createFileRoute("/")({
   loader: () => getTaxa(),

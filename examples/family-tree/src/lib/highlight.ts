@@ -30,7 +30,7 @@ export type HighlightState = {
   /** The resolved common ancestor, rendered in the MRCA color. */
   readonly mrcaPath: string | null;
   /**
-   * Free-form match set: the taxa returned by a Phase-5 query control (lquery /
+   * Free-form match set: the taxa returned by a query control (lquery /
    * lquery-array / ltxtquery search, or a generation-depth `nlevel` filter).
    * Painted in the `search` color; unlike lineage/subtree it carries no implied
    * tree shape, so generation matches (siblings across the tree) light up as a
@@ -78,11 +78,11 @@ export function selectionHighlight(
 }
 
 /**
- * Highlight produced by a Phase-5 query control: every taxon the server query
- * returned (lquery / lquery-array / ltxtquery search, or an `nlevel` generation
- * filter) lights up in the `search` color and the rest fade. Edges paint
- * `search` only between two matched endpoints, so a subtree-shaped match reads
- * as a connected fan while a generation match reads as a scatter.
+ * Highlight produced by a query control: every taxon the server query returned
+ * (lquery / lquery-array / ltxtquery search, or an `nlevel` generation filter)
+ * lights up in the `search` color and the rest fade. Edges paint `search` only
+ * between two matched endpoints, so a subtree-shaped match reads as a connected
+ * fan while a generation match reads as a scatter.
  */
 export function matchHighlight(paths: Iterable<string>): HighlightState {
   return {

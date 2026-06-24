@@ -44,4 +44,4 @@ export default class M extends Migration {
   }
 }
 
-MigrationCLI.run(import.meta.url, M);
+void MigrationCLI.run(import.meta.url, M);

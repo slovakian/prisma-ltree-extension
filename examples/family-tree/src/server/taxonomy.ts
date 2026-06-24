@@ -26,18 +26,6 @@ export type TaxonRow = {
   thumbnailUrl: string | null;
 };
 
-const HOMO_SAPIENS = "Catarrhini.Hominoidea.Hominidae.Homininae.Hominini.Homo.Homo_sapiens";
-const MANDRILLUS_SPHINX =
-  "Catarrhini.Cercopithecoidea.Cercopithecidae.Cercopithecinae.Mandrillus.Mandrillus_sphinx";
-const PAN_TROGLODYTES = "Catarrhini.Hominoidea.Hominidae.Homininae.Hominini.Pan.Pan_troglodytes";
-const HOMO = "Catarrhini.Hominoidea.Hominidae.Homininae.Hominini.Homo";
-export const REFERENCE_PATHS = {
-  HOMO_SAPIENS,
-  MANDRILLUS_SPHINX,
-  PAN_TROGLODYTES,
-  HOMO,
-} as const;
-
 export const getTaxa = createServerFn({ method: "GET" }).handler(async () => {
   const { getTaxaQuery } = await import("./taxonomy.server");
   return getTaxaQuery();

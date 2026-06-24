@@ -26,11 +26,11 @@ import { TaxonNode } from "./TaxonNode";
  * produce hydration warnings, so we gate the `<ReactFlow>` mount behind a
  * `useEffect` flag and render a matching-height skeleton on the server.
  *
- * Phase 4 adds interactivity: the base layout (`buildTree`) is computed once per
- * taxa set, then the active `highlight` is folded into per-node `data` and
- * per-edge stroke each render so clicking a taxon paints its lineage/subtree and
- * the MRCA picker can recolor + recenter the canvas. `focusNode` is handed back
- * to the parent via `onReady` so breadcrumb and MRCA controls can recenter.
+ * The base layout (`buildTree`) is computed once per taxa set; the active
+ * `highlight` is folded into per-node `data` and per-edge stroke each render so
+ * clicking a taxon paints its lineage/subtree and the MRCA picker can recolor +
+ * recenter the canvas. `focusNode` is handed back to the parent via `onReady`
+ * so breadcrumb and MRCA controls can recenter.
  */
 const nodeTypes: NodeTypes = { taxon: TaxonNode };
 
