@@ -43,19 +43,17 @@ apps/
 docs/
   prisma-next/               # prisma-next extension architecture docs
   ltree/                     # PostgreSQL ltree reference docs
-  spec/                      # Fumadocs docs site spec & plan
+  spec/                      # Fumadocs docs site architecture spec
 ```
 
 ## Docs Site Implementation
 
 Working on `apps/web` documentation? Start here:
 
-- **Guide:** `apps/web/AGENTS.md` — step-by-step tasks, skills, and common patterns
-- **Plan:** `docs/spec/fumadocs-docs-site-plan.md` — full implementation roadmap
-- **Handoff:** `docs/spec/fumadocs-docs-site-handoff.md` — task completion status and next steps
-- **Spec:** `docs/spec/fumadocs-docs-site-spec.md` — assumptions and architecture
+- **Guide:** `apps/web/AGENTS.md` — contributor guide, skills, and common patterns
+- **Spec:** `docs/spec/fumadocs-docs-site-spec.md` — architecture assumptions
 
-**Current status:** Tasks 1–7 complete, Task 8 (search) deferred, Task 9 ready to start.
+**Current status:** Docs site v1 shipped (Tasks 1–7, 9). Search (Task 8) deferred.
 
 ## Synced External References
 

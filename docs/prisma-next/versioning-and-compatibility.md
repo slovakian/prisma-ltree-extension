@@ -190,4 +190,4 @@ pnpm run sync-docs
 - [Ecosystem Extensions & Packs](./ecosystem-extensions-and-packs.md) — four-slice model, contract spaces
 - Upstream skill: `.sync/prisma-next/skills/extension-author/prisma-next-extension-upgrade/SKILL.md`
 - Upstream release notes: `.sync/prisma-next/docs/releases/` (breaking changes per minor)
-- Our spec §4.5: `docs/spec/prisma-ltree-spec.md` (dependency strategy)
+- Dependency strategy: exact-pin `@prisma-next/*` per this document and `packages/extension-ltree/package.json`

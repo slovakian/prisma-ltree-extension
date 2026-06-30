@@ -7,9 +7,7 @@ This file documents the Fumadocs integration for `apps/web` and guides future ag
 Before working on the docs site, read these in order:
 
 1. **This file** — you're here
-2. **Implementation plan:** `docs/spec/fumadocs-docs-site-plan.md`
-3. **Handoff notes:** `docs/spec/fumadocs-docs-site-handoff.md`
-4. **Spec:** `docs/spec/fumadocs-docs-site-spec.md`
+2. **Spec:** `docs/spec/fumadocs-docs-site-spec.md` — architecture assumptions
 
 ## Current Status
 
@@ -22,6 +20,7 @@ Before working on the docs site, read these in order:
 - ✓ Task 5 — MDX components
 - ✓ Task 6 — Minimal docs content
 - ✓ Task 7 — Landing page integration
+- ✓ Task 9 — AGENTS.md contributor guide (this file)
 
 **Deferred tasks:**
 
@@ -32,8 +31,6 @@ Before working on the docs site, read these in order:
 
 | What                                   | Where                                                                | When to Read                           |
 | -------------------------------------- | -------------------------------------------------------------------- | -------------------------------------- |
-| Implementation plan & task breakdown   | `docs/spec/fumadocs-docs-site-plan.md`                               | Starting any task on docs site         |
-| Handoff notes & task completion status | `docs/spec/fumadocs-docs-site-handoff.md`                            | Before starting a new task             |
 | Spec & assumptions                     | `docs/spec/fumadocs-docs-site-spec.md`                               | Understanding the why behind decisions |
 | Operator documentation accuracy source | `docs/feature-support.md`                                            | When adding or updating operator docs  |
 | Fumadocs TanStack Start guide          | https://www.fumadocs.dev/docs/manual-installation/tanstack-start.mdx | Setting up routes, loaders             |
@@ -256,9 +253,7 @@ export default defineConfig({
 
 ## Next Steps
 
-Check `docs/spec/fumadocs-docs-site-handoff.md` for the next task and its acceptance criteria.
-
-Tasks are completed sequentially; do not start multiple tasks in one session unless explicitly asked by the user.
+Deferred work: Task 8 (search API) and Task 10 (final validation). For new docs pages or operator coverage, follow the common tasks above and verify against `docs/feature-support.md`.
 
 ## Skill Checklist
 

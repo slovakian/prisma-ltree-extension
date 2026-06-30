@@ -1,10 +1,8 @@
 # Tree-of-Life Redesign — Done
 
 The phased visual redesign of `examples/family-tree` is **complete**. This
-replaces the per-phase handoff chain (`phase-1..5-handoff.md`) with a single
-summary of what shipped, where it lives, and confirmation that every spec §5
-acceptance criterion is met. Companion docs: [`redesign-spec.md`](./redesign-spec.md),
-[`redesign-plan.md`](./redesign-plan.md).
+document summarizes what shipped, where it lives, and the acceptance criteria
+that were met.
 
 ## What each phase delivered
 

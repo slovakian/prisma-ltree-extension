@@ -7,7 +7,7 @@ Doc-writing agents read this file to accurately reflect the extension's surface.
 **Scope decision:** "Everything reasonable" — Tier 1 + Tier 2 + Tier 3 (first-match array ops)
 **Last updated:** 2026-06-19
 
-See `docs/spec/prisma-ltree-spec.md` for the full spec. See `docs/progress/` for per-tier logs.
+See `packages/extension-ltree/README.md` for usage documentation and `docs/decisions/` for design ADRs.
 
 ---
 
