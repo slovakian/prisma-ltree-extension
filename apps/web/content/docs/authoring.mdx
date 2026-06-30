@@ -115,6 +115,43 @@ After editing either contract, re-emit:
 pnpm prisma-next contract emit
 ```
 
+## Indexing with GiST
+
+`ltree` queries — ancestor/descendant checks and `lquery`/`ltxtquery` pattern matches —
+are accelerated by a **GiST index**. `prisma-ltree` registers a `gist` index type, so you
+declare the index in your contract instead of writing raw SQL. PostgreSQL picks the right
+operator class (`gist_ltree_ops` for `ltree`, `gist__ltree_ops` for `ltree[]`) from the
+column type, and the migration renders `CREATE INDEX … USING gist (…)`.
+
+```typescript title="contract.ts"
+Category: model("Category", {
+  fields: {
+    id: field.id.uuidv4String(),
+    path: field.namedType(types.Path),
+  },
+}).sql(({ cols, constraints }) => ({
+  table: "category",
+  indexes: [
+    constraints.index([cols.path], {
+      name: "category_path_gist_idx",
+      type: "gist",
+      options: {},
+    }),
+  ],
+})),
+```
+
+<Callout type="warn">
+GiST authoring is fully supported in the **TypeScript lane**. The **PSL lane**
+(`@@index([path], type: "gist")`) is currently blocked by an upstream Prisma Next gap:
+`@prisma-next/postgres`'s `defineConfig` does not yet forward extension index-type
+registrations to the PSL interpreter, so `contract emit` rejects the authored `gist` type.
+Use the TypeScript lane until Prisma Next threads the refs.
+</Callout>
+
+Custom operator-class tuning (`gist_ltree_ops(siglen=N)`) is out of scope — `siglen` is an
+opclass typmod, not a `WITH (...)` storage parameter.
+
 ## Next steps
 
 Once your columns are declared, see [Getting Started](/docs/getting-started) for runtime

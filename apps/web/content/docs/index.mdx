@@ -20,3 +20,9 @@ The PostgreSQL `ltree` type stores dot-separated path labels (e.g. `Top.Science.
 
 - [Hierarchy Operators](/docs/operations/hierarchy): ancestor and descendant checks
 - [Pattern Matching Operators](/docs/operations/pattern-matching): `lquery` and `ltxtquery` patterns
+
+## Indexing
+
+Declare a **GiST index** on `ltree` / `ltree[]` columns straight from your contract to
+accelerate ancestor, descendant, and pattern queries — no raw SQL. See
+[Indexing with GiST](/docs/authoring#indexing-with-gist).
