@@ -16,6 +16,8 @@ raw SQL.
 - **Scalar functions** — depth, subpaths, label index, lowest common ancestor
 - **Concatenation & conversion** — path building and `ltree` ↔ `text` conversion
 - **Array first-match** — find the first matching path in an `ltree[]` column
+- **GiST indexes** — declare `type: "gist"` indexes on `ltree` / `ltree[]` columns
+  (TypeScript lane) to accelerate ancestor/descendant/`lquery` queries — no raw SQL
 - **Baseline migration** — installs the Postgres extension via
   `CREATE EXTENSION IF NOT EXISTS ltree` when the pack is composed
 
@@ -209,6 +211,41 @@ const plan = sql
 | `paths.firstMatchLtxtquery(query)` | `ltree[] ?@ ltxtquery` |
 
 Use `ltreeArray()` for `ltree[]` columns that expose these methods.
+
+## GiST indexes
+
+The pack registers a `gist` index type, so you can declare a GiST index on an `ltree` or
+`ltree[]` column directly in your contract — Postgres picks the right operator class
+(`gist_ltree_ops` / `gist__ltree_ops`) from the column type, and the migration renders
+`CREATE INDEX … USING gist (…)`:
+
+```typescript title="contract.ts"
+Category: model("Category", {
+  fields: {
+    id: field.id.uuidv4String(),
+    path: field.namedType(types.Path),
+  },
+}).sql(({ cols, constraints }) => ({
+  table: "category",
+  indexes: [
+    constraints.index([cols.path], {
+      name: "category_path_gist_idx",
+      type: "gist",
+      options: {},
+    }),
+  ],
+})),
+```
+
+> **Lane support.** GiST authoring is fully supported in the **TypeScript lane**. The
+> **PSL lane** (`@@index([path], type: "gist")`) is currently blocked by an upstream
+> prisma-next gap: `@prisma-next/postgres`'s `defineConfig` does not forward extension
+> index-type registrations to the PSL interpreter, so `prisma-next contract emit` rejects
+> the authored `gist` type. Use the TypeScript lane until prisma-next threads the refs.
+> See [ADR-005](https://github.com/slovakian/prisma-ltree/blob/main/docs/decisions/ADR-005-gist-index-support.md).
+
+Custom operator-class tuning (`gist_ltree_ops(siglen=N)`) is out of scope — `siglen` is an
+opclass typmod, not a `WITH (...)` storage parameter.
 
 ## Types
 

@@ -87,6 +87,20 @@ Receiver is `ltree[]` via `pg/ltree-array@1` (ADR-003).
 | `ltree[] ?~ lquery`    | `paths.firstMatchLquery(pattern)`  | supported | 3    |
 | `ltree[] ?@ ltxtquery` | `paths.firstMatchLtxtquery(query)` | supported | 3    |
 
+## Indexes
+
+The pack registers a `gist` index type (ADR-005) so authors can declare GiST
+indexes on `ltree` / `ltree[]` columns through the standard index surface — no
+raw SQL. PostgreSQL selects the default operator class (`gist_ltree_ops` for
+`ltree`, `gist__ltree_ops` for `ltree[]`) from the column type, and the Postgres
+adapter renders `CREATE INDEX … USING gist (…)`.
+
+| Feature                                 | Authoring surface                                  | Status                  | Notes                                                                                          |
+| --------------------------------------- | -------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- |
+| GiST index on `ltree` (default opclass) | TS `constraints.index([c], { type: "gist" })`      | supported (TS lane)     | ADR-005; `pg/ltree@1` column → `gist_ltree_ops`                                               |
+| GiST index on `ltree[]` (default)       | TS `constraints.index([c], { type: "gist" })`      | supported (TS lane)     | ADR-005; `pg/ltree-array@1` column → `gist__ltree_ops`                                        |
+| GiST index in the **PSL lane**          | `@@index([c], type: "gist")`                       | blocked-upstream        | Registration is correct; `@prisma-next/postgres` `defineConfig` does not yet thread extension `composedExtensionPackRefs` into the PSL provider (ADR-005). Use the TS lane until prisma-next forwards the refs. |
+
 ## Out-of-Scope (Tracked)
 
 | Feature                                 | SQL                   | Status       | Reason / Revisit                                                                             |
@@ -96,9 +110,9 @@ Receiver is `ltree[]` via `pg/ltree-array@1` (ADR-003).
 | Boolean array variant                   | `ltree[] ~ lquery`    | out-of-scope | same                                                                                         |
 | Boolean array variant                   | `ltree[] ? lquery[]`  | out-of-scope | same                                                                                         |
 | Boolean array variant                   | `ltree[] @ ltxtquery` | out-of-scope | same                                                                                         |
-| GiST index (`gist_ltree_ops`, `siglen`) | DDL                   | out-of-scope | DDL/index story owned by Prisma's index system                                               |
-| GiST array index (`gist__ltree_ops`)    | DDL                   | out-of-scope | same                                                                                         |
-| Hash index over `ltree`                 | DDL                   | out-of-scope | same                                                                                         |
+| GiST opclass tuning (`siglen=N`)        | DDL typmod            | out-of-scope | `siglen` is a `gist_ltree_ops` operator-class typmod, not a `WITH (...)` storage param; needs per-column opclass support upstream (ADR-005, ADR 210 non-goal) |
+| GiST storage params (`fillfactor`, `buffering`) | `WITH (...)`  | planned      | Legitimate GiST `WITH` options; deferrable TS-only number/string-leaf `options` follow-up (ADR-005) |
+| Hash index over `ltree`                 | DDL                   | out-of-scope | Not a recommended ltree index; same registration pattern if ever needed                      |
 | B-tree index over `ltree`               | DDL                   | out-of-scope | Automatic for `<,<=,=,>=,>`; no extension op needed                                          |
 
 ---
@@ -110,3 +124,4 @@ Receiver is `ltree[]` via `pg/ltree-array@1` (ADR-003).
 - 2026-06-19 — Tier 2 complete (Checkpoint 3). Concatenation (`concat`, `concatText`, `prependText`) and conversion (`toText`, `toLtree`) → `supported`, each with golden + PGlite integration + type-level coverage. Free-function lowering resolved by re-rooting on a natural `self` (ADR-002): `text2ltree` ships as `text.toLtree()` (text-rooted); the self-less `Ltree.fromText()` constructor stays `planned` pending a free-function call surface.
 - 2026-06-19 — Tier 3 complete (Checkpoint 4). Array receiver resolved via dedicated `pg/ltree-array@1` codec + `ltreeArray()` column helper (ADR-003). All four first-match operators → `supported` with golden + PGlite integration + type-level coverage. `lca(ltree[])` remains `planned` as `paths.lca()` — mechanism unblocked, method not in Tier 3 scope.
 - 2026-06-19 — Phase 6 polish. Coverage threshold set to 95% in `vite.config.ts`; gaps filled to **100%** statements/branches/functions/lines (116 tests). Package `README.md` and per-tier `docs/progress/` logs written. Matrix verified accurate against shipped surface (no status changes). Pending: npm publish over the `0.0.1` stub (Task 6.3, awaiting approval).
+- 2026-06-30 — GiST index support (ADR-005). Pack registers a `gist` index type via `defineIndexTypes`; authors declare GiST indexes through `constraints.index([c], { type: "gist" })` (TS) / `@@index([c], type: "gist")` (PSL). **TS lane → supported** end-to-end (emit + PGlite). **PSL lane → blocked-upstream**: `@prisma-next/postgres` `defineConfig` does not forward extension `composedExtensionPackRefs` to the PSL interpreter, so the index-type registry is built without the extension's `indexTypes`. Custom `siglen` opclass tuning stays out-of-scope; `fillfactor`/`buffering` `WITH` options are a planned TS-only follow-up.
