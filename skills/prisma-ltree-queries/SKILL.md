@@ -114,7 +114,7 @@ Predicate helpers (`and`, `or`, ranges) follow `prisma-next-queries` — ltree m
 - **`paths.lca()` on `ltree[]`** — planned; use variadic `path.lca(other, ...)` on scalar paths today.
 - **`Ltree.fromText()` static constructor** — use `text.toLtree()` on text columns.
 - **Automatic path maintenance on insert** — you build/store path strings; triggers or app logic maintain hierarchy.
-- **GiST index helpers** — not in this extension.
+- **GiST indexes** — declare them in the contract (TypeScript lane) via `constraints.index([cols.path], { type: "gist", options: {} })`; the PSL lane is blocked upstream (see the adoption skill / ADR-005). Custom `siglen` opclass tuning is out of scope.
 
 ## Reference Files
 

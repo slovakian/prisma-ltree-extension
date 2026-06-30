@@ -14,9 +14,11 @@ idiom, and where in a consumer's project it gets wired. Keep it in sync with
   refresh the clone). Consistency with the ecosystem is the point — a consumer who
   has wired any prisma-next extension already knows how to wire this one. Do not
   diverge from the reference shape or naming without an ADR.
-- **Six subpath exports, no root export.** A bare `import x from "prisma-ltree"`
+- **Seven subpath exports, no root export.** A bare `import x from "prisma-ltree"`
   would have to pick a single plane and would mislead. Forcing the plane into the
   path (`/control` vs `/runtime`) is what keeps the three-place wiring legible.
+  (`/index-types` is the ecosystem-canonical home for `defineIndexTypes` output, as
+  in ParadeDB.)
 - **Default-vs-named convention:** plane singletons (`control`, `runtime`, `pack`)
   are **default** exports — there is exactly one descriptor per plane, so the
   consumer aliases it freely (`import ltree from …`). Collections and types
@@ -25,7 +27,7 @@ idiom, and where in a consumer's project it gets wired. Keep it in sync with
 - `"sideEffects": false` + plane-per-subpath is what keeps the runtime bundle from
   pulling in migration code. Don't collapse subpaths.
 
-## The six exports
+## The seven exports
 
 | Subpath                        | Exports                                                              | Import idiom                                                                    | Wired in (consumer project)                                              |
 | ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -35,6 +37,7 @@ idiom, and where in a consumer's project it gets wired. Keep it in sync with
 | `prisma-ltree/column-types`    | `ltree()`, `ltreeArray()` — **named fns**                            | `import { ltree, ltreeArray } from "prisma-ltree/column-types"`                 | inside contract → `field.column(ltree())`                                |
 | `prisma-ltree/codec-types`     | `CodecTypes`, `Ltree`, `LtreeArray` — **named, type-only**           | `import type { CodecTypes, Ltree, LtreeArray } from "prisma-ltree/codec-types"` | typing emitted `contract.d.ts` / result rows                             |
 | `prisma-ltree/operation-types` | `QueryOperationTypes` — **named, type-only**                         | `import type { QueryOperationTypes } from "prisma-ltree/operation-types"`       | query-builder operator inference                                         |
+| `prisma-ltree/index-types`     | `ltreeIndexTypes` (named); `LtreeIndexTypes`, `GistIndexOptions` (type-only) | `import { ltreeIndexTypes } from "prisma-ltree/index-types"`             | wired onto the pack/control descriptor (`indexTypes`); rarely imported directly by consumers |
 
 (`./package.json` is also exported, per ecosystem convention, for tooling that
 introspects the manifest.)

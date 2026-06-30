@@ -193,7 +193,7 @@ When inserting rows, build paths in application code (`parentPath.concatText("Ch
 
 - **PSL contract authoring** — no `ltree` type in `contract.prisma` today. Workaround: TypeScript contract with `ltree()` / `ltreeArray()`.
 - **Non-Postgres targets** — Mongo, SQLite, etc. Workaround: not supported; use Postgres for ltree.
-- **GiST / specialized ltree indexes via the extension** — index DDL is owned by Prisma Next's index story. Workaround: express indexes through PN's index APIs when available, or track as a feature request on the repo.
+- **GiST indexes (TypeScript lane)** — declare `constraints.index([cols.path], { type: "gist", options: {} })` in `contract.ts`; the pack registers the `gist` index type and the migration renders `CREATE INDEX … USING gist`. The **PSL lane** (`@@index(type: "gist")`) is blocked by an upstream gap (`@prisma-next/postgres` `defineConfig` does not forward extension index-type refs to the PSL interpreter) — use the TS lane until prisma-next threads the refs. Custom `siglen` opclass tuning stays out of scope. See ADR-005.
 - **`lquery` / `ltxtquery` as column types** — patterns are **string parameters** to `matchesLquery` / `matchesLtxtquery`, not stored column types.
 - **Boolean `ltree[]` operators** (`ltree[] @> ltree`, etc.) — out of scope; use scalar ops or first-match array ops instead.
 
