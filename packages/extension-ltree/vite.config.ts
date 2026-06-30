@@ -8,6 +8,7 @@ export default defineConfig({
       "src/exports/codec-types.ts",
       "src/exports/operation-types.ts",
       "src/exports/column-types.ts",
+      "src/exports/index-types.ts",
       "src/exports/pack.ts",
     ],
     dts: { tsgo: true },
